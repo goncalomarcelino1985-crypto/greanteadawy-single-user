@@ -1,0 +1,19 @@
+{
+  "id": "greanteadawy.counter-melody",
+  "name": "Counter Melody",
+  "version": "1.0.0",
+  "type": "generator",
+  "author": "GreanTeaDawy examples",
+  "description": "Reads the melody of another channel in the pattern and writes a harmony line under it in the project's scale — thirds, sixths or alternating — leaving out a share of the notes for space.",
+  "license": "MIT",
+  "apiVersion": 1,
+  "main": "generator.js",
+  "permissions": ["generator", "project-read"],
+  "params": [
+    { "key": "interval", "label": "Interval", "type": "select", "options": ["third", "sixth", "alternate"], "default": "third" },
+    { "key": "octave", "label": "Octave", "min": -2, "max": 1, "default": 0, "step": 1 },
+    { "key": "density", "label": "Density", "min": 0.1, "max": 1, "default": 0.8 },
+    { "key": "velocity", "label": "Velocity", "min": 0.1, "max": 1, "default": 0.65 }
+  ],
+  "presets": { "Thirds below": {}, "Sixths": { "interval": "sixth" }, "Sparse": { "interval": "alternate", "density": 0.5 } }
+}

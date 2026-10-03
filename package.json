@@ -1,0 +1,39 @@
+{
+  "name": "greanteadawy",
+  "version": "0.7.0",
+  "private": true,
+  "description": "GreanTeaDawy - a browser-based, pattern-and-playlist DAW (Node.js + React) with an MCP server so Claude can make beats with you.",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n server,client -c magenta,cyan \"npm:dev -w server\" \"npm:dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server",
+    "mcp": "node server/src/mcp/stdio.js",
+    "test": "npm test -w packages/core && npm test -w server && npm test -w client",
+    "docs:mcp": "cd server && node ../scripts/gen-mcp-docs.mjs",
+    "test:e2e": "npm run build && playwright test",
+    "screenshots": "npm run build && SCREENSHOTS=1 playwright test e2e/screenshots.spec.js",
+    "lint": "eslint .",
+    "reset-password": "node server/src/cli/reset-password.js",
+    "plugin:pack": "node scripts/pack-plugin.mjs",
+    "skills:pack": "node scripts/pack-skills.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "1.56",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^17.13.0"
+  }
+}

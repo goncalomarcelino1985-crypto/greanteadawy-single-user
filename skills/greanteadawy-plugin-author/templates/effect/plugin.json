@@ -1,0 +1,19 @@
+{
+  "id": "yourname.my-effect",
+  "name": "My Effect",
+  "version": "1.0.0",
+  "type": "effect",
+  "author": "Your Name",
+  "description": "What it does, in one or two sentences (shown in the install dialog and to Claude).",
+  "license": "MIT",
+  "apiVersion": 1,
+  "main": "dsp.js",
+  "permissions": ["audio-processing"],
+  "color": "#5ab8f0",
+  "params": [
+    { "key": "amount", "label": "Amount", "min": 0, "max": 1, "default": 0.5, "automatable": true },
+    { "key": "tone", "label": "Tone", "min": 200, "max": 18000, "default": 8000, "curve": "log", "unit": "Hz", "automatable": true },
+    { "key": "mix", "label": "Mix", "min": 0, "max": 1, "default": 1, "automatable": true }
+  ],
+  "presets": { "Default": {}, "Subtle": { "amount": 0.2 }, "Heavy": { "amount": 0.9, "tone": 4000 } }
+}

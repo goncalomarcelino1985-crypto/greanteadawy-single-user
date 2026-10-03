@@ -1,0 +1,6 @@
+# ◆ GreanTeaDawy
+
+**A pattern-based browser DAW — with Claude as your co-producer.**
+
+HI, I'm Gayan Viduranga, the intial developer of GreanTeaDawy.(actually its most parts developed by Claude AI). I don't have a lot of time to work on this project, you can fork it and make your own version. If you like it, please give it a star on GitHub. I just had fun idea to create a DAW with MCP to help music producers to make music faster and easier, I know its not feature rich or advanced as industry-standard DAWs. I hope you enjoy it. I also not have music production experience,music theory knowledge, music production knowledge, music tools knowledge, so please forgive me if there are any mistakes in this project. I will try to fix them as soon as possible. If you have any questions, add on community of GitHub. Thank you for using GreanTeaDawy. it may have bugs, security issues but i fixed most of them before public release. If you find any bugs, please report them on GitHub. your humble contributions are welcome.
+Thank you for your support.

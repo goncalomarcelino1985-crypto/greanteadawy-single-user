@@ -1,0 +1,74 @@
+# GreanTeaDawy with Docker Compose.
+#   cp .env.example .env    # optional: set PUBLIC_URL, ALLOWED_HOSTS, TRUST_PROXY, SETUP_CODE, ... (see docs/docker.md)
+#   docker compose up -d --build
+#   docker compose logs greanteadawy     # first run: shows the admin setup code
+# Studio: http://localhost:3001   MCP: http://localhost:3001/mcp (with your API token from Settings → API & MCP)
+#
+# HTTPS for other machines: `docker compose --profile proxy up -d` adds Caddy (deploy/Caddyfile) in front — set
+# DOMAIN, PUBLIC_URL, ALLOWED_HOSTS and TRUST_PROXY=1 in .env first.
+name: greanteadawy
+
+services:
+  greanteadawy:
+    build: .
+    image: greanteadawy:latest
+    restart: unless-stopped
+    ports:
+      # localhost only: nothing else on the network can reach it except through the proxy profile
+      - "127.0.0.1:${GTD_PORT:-3001}:3001"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3001
+      DATA_DIR: /data
+      # the URL people (and Claude's download links) use; change it with GTD_PORT or when behind the proxy
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:${GTD_PORT:-3001}}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      SETUP_CODE: ${SETUP_CODE:-}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-50}
+      MCP_TOKEN: ${MCP_TOKEN:-}
+      FFMPEG_PATH: ${FFMPEG_PATH:-}
+      FFMPEG_TIMEOUT_SEC: ${FFMPEG_TIMEOUT_SEC:-300}
+      FFMPEG_MAX_JOBS: ${FFMPEG_MAX_JOBS:-2}
+      PLUGINS_ENABLED: ${PLUGINS_ENABLED:-true}
+    volumes:
+      - greanteadawy-data:/data
+    # hardening: read-only image, no privilege escalation, no Linux capabilities, bounded resources
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # optional HTTPS reverse proxy (Let's Encrypt): docker compose --profile proxy up -d
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["proxy"]
+    restart: unless-stopped
+    depends_on:
+      - greanteadawy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  greanteadawy-data:
+  caddy-data:
+  caddy-config:

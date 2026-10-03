@@ -1,0 +1,25 @@
+{
+  "name": "@greanteadawy/server",
+  "version": "0.7.0",
+  "description": "GreanTeaDawy backend: REST API, WebSocket live sync and MCP server (stdio + Streamable HTTP)",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "greanteadawy-mcp": "src/mcp/stdio.js"
+  },
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "node --test --test-timeout=90000 test/*.test.js"
+  },
+  "dependencies": {
+    "@greanteadawy/core": "*",
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "express": "^5.2.1",
+    "multer": "^2.0.2",
+    "music-metadata": "^11.16.1",
+    "ws": "^8.18.3",
+    "zod": "^4.1.12"
+  }
+}

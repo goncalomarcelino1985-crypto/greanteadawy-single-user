@@ -1,0 +1,24 @@
+{
+  "id": "yourname.my-sampled-keys",
+  "name": "My Sampled Keys",
+  "version": "1.0.0",
+  "type": "instrument",
+  "author": "Your Name",
+  "description": "A multisampled instrument: the studio's sampler plays these files, repitched from each zone's root note. No code.",
+  "license": "CC0-1.0",
+  "apiVersion": 1,
+  "permissions": ["samples"],
+  "color": "#e4b35a",
+  "defaultKey": 60,
+  "samples": [
+    { "file": "samples/c3.wav", "root": 48, "lo": 0, "hi": 53 },
+    { "file": "samples/c4.wav", "root": 60, "lo": 54, "hi": 65 },
+    { "file": "samples/c5.wav", "root": 72, "lo": 66, "hi": 127 }
+  ],
+  "params": [
+    { "key": "gain", "label": "Gain", "min": 0, "max": 2, "default": 1 },
+    { "key": "attack", "label": "Attack", "min": 0.001, "max": 1, "default": 0.002, "curve": "log", "unit": "s" },
+    { "key": "release", "label": "Release", "min": 0.02, "max": 3, "default": 0.4, "curve": "log", "unit": "s" }
+  ],
+  "presets": { "Default": {}, "Soft": { "attack": 0.03, "gain": 0.8 } }
+}

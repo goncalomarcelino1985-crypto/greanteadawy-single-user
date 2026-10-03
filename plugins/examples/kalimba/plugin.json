@@ -1,0 +1,25 @@
+{
+  "id": "greanteadawy.kalimba",
+  "name": "Kalimba",
+  "version": "1.0.0",
+  "type": "instrument",
+  "author": "GreanTeaDawy examples",
+  "description": "A sample-based thumb piano (no code): four multisampled tines, played back by the studio's own sample engine. A template for packing your own sampled instruments.",
+  "license": "MIT",
+  "apiVersion": 1,
+  "permissions": ["samples"],
+  "color": "#e4b35a",
+  "defaultKey": 72,
+  "samples": [
+    { "file": "samples/c4.wav", "root": 60, "lo": 0, "hi": 63 },
+    { "file": "samples/g4.wav", "root": 67, "lo": 64, "hi": 69 },
+    { "file": "samples/c5.wav", "root": 72, "lo": 70, "hi": 77 },
+    { "file": "samples/c6.wav", "root": 84, "lo": 78, "hi": 127 }
+  ],
+  "params": [
+    { "key": "gain", "label": "Gain", "min": 0, "max": 2, "default": 1 },
+    { "key": "attack", "label": "Attack", "min": 0.001, "max": 0.5, "default": 0.001, "curve": "log", "unit": "s" },
+    { "key": "release", "label": "Release", "min": 0.02, "max": 3, "default": 0.6, "curve": "log", "unit": "s" }
+  ],
+  "presets": { "Kalimba": {}, "Soft": { "attack": 0.02, "gain": 0.8 }, "Damped": { "release": 0.08 } }
+}

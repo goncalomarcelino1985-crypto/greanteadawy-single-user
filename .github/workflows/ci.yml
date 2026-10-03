@@ -1,0 +1,42 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # ffmpeg: the export tests convert to every format (they skip the real-ffmpeg part without it)
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker build -t greanteadawy:ci .
+      # start it hardened like docker-compose.yml and wait for the health check
+      - run: |
+          docker run -d --name gtd -p 127.0.0.1:3001:3001 --read-only --tmpfs /tmp --cap-drop ALL \
+            --security-opt no-new-privileges -e PUBLIC_URL=http://localhost:3001 greanteadawy:ci
+          for i in $(seq 1 30); do
+            [ "$(docker inspect -f '{{.State.Health.Status}}' gtd)" = healthy ] && break
+            sleep 2
+          done
+          docker inspect -f '{{.State.Health.Status}}' gtd | grep -q healthy
+          curl -fsS http://localhost:3001/api/health
+          docker exec gtd ffmpeg -hide_banner -encoders | grep -q libmp3lame
+          docker logs gtd | grep -q "Setup code"

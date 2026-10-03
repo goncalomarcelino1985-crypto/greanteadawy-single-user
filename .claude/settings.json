@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(npm test:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run build)",
+      "Bash(npm run test:e2e)",
+      "Bash(npm run test:e2e:*)",
+      "Bash(npm run docs:mcp)",
+      "Bash(npm run screenshots)",
+      "Bash(npx playwright test:*)",
+      "Bash(npx eslint:*)",
+      "Bash(node --test:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./data/**)"
+    ]
+  }
+}

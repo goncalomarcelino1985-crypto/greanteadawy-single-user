@@ -1,0 +1,10 @@
+# HTTPS reverse proxy for GreanTeaDawy (used by `docker compose --profile proxy up -d`).
+# Set DOMAIN in .env (e.g. beats.example.com, its DNS pointing at this machine) plus, for the app:
+#   PUBLIC_URL=https://beats.example.com  ALLOWED_HOSTS=beats.example.com  TRUST_PROXY=1
+{$DOMAIN} {
+	encode zstd gzip
+	# WebSockets (/ws) and MCP's streamed responses (/mcp) must not be buffered
+	reverse_proxy greanteadawy:3001 {
+		flush_interval -1
+	}
+}

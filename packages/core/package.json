@@ -1,0 +1,17 @@
+{
+  "name": "@greanteadawy/core",
+  "version": "0.7.0",
+  "description": "Shared project model, edit operations, music theory, MIDI and summaries for GreanTeaDawy",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test --test-timeout=90000 test/*.test.js"
+  },
+  "dependencies": {
+    "immer": "^11.1.0"
+  }
+}

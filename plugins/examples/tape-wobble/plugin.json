@@ -1,0 +1,25 @@
+{
+  "id": "greanteadawy.tape-wobble",
+  "name": "Tape Wobble",
+  "version": "1.0.0",
+  "type": "effect",
+  "author": "GreanTeaDawy examples",
+  "description": "Worn cassette: slow wow and fast flutter pitch drift, tape saturation and a darkening tone control. Great on lo-fi keys and pads; automate wow for a 'warped' moment.",
+  "license": "MIT",
+  "apiVersion": 1,
+  "main": "dsp.js",
+  "permissions": ["audio-processing"],
+  "color": "#c86be0",
+  "params": [
+    { "key": "wow", "label": "Wow", "min": 0, "max": 1, "default": 0.4, "automatable": true },
+    { "key": "flutter", "label": "Flutter", "min": 0, "max": 1, "default": 0.25, "automatable": true },
+    { "key": "drive", "label": "Saturation", "min": 0, "max": 1, "default": 0.2 },
+    { "key": "tone", "label": "Tone", "min": 1000, "max": 20000, "default": 9000, "curve": "log", "unit": "Hz", "automatable": true },
+    { "key": "mix", "label": "Mix", "min": 0, "max": 1, "default": 1, "automatable": true }
+  ],
+  "presets": {
+    "Cassette": {},
+    "Warped": { "wow": 0.9, "flutter": 0.4, "tone": 6000 },
+    "Subtle": { "wow": 0.15, "flutter": 0.1, "drive": 0.1, "tone": 14000 }
+  }
+}

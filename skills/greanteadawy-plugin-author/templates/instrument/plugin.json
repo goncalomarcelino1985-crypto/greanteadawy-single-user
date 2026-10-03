@@ -1,0 +1,24 @@
+{
+  "id": "yourname.my-synth",
+  "name": "My Synth",
+  "version": "1.0.0",
+  "type": "instrument",
+  "author": "Your Name",
+  "description": "What it sounds like and what it's good for.",
+  "license": "MIT",
+  "apiVersion": 1,
+  "main": "dsp.js",
+  "permissions": ["audio-processing"],
+  "color": "#46c79a",
+  "polyphony": 12,
+  "defaultKey": 60,
+  "params": [
+    { "key": "wave", "label": "Wave", "type": "select", "options": ["sine", "triangle", "saw"], "default": "triangle" },
+    { "key": "gain", "label": "Gain", "min": 0, "max": 1, "default": 0.5 },
+    { "key": "attack", "label": "Attack", "min": 0.001, "max": 2, "default": 0.005, "curve": "log", "unit": "s", "group": "Envelope" },
+    { "key": "decay", "label": "Decay", "min": 0.01, "max": 4, "default": 0.4, "curve": "log", "unit": "s", "group": "Envelope" },
+    { "key": "sustain", "label": "Sustain", "min": 0, "max": 1, "default": 0.5, "group": "Envelope" },
+    { "key": "release", "label": "Release", "min": 0.005, "max": 4, "default": 0.3, "curve": "log", "unit": "s", "group": "Envelope" }
+  ],
+  "presets": { "Default": {}, "Pluck": { "wave": "saw", "decay": 0.15, "sustain": 0 }, "Pad": { "attack": 0.6, "release": 1.5, "sustain": 0.8 } }
+}
