@@ -1,5 +1,6 @@
 name: CI
-on: [push, pull_request]
+#disabled automatic push, will enable in future with better testing
+on: workflow_dispatch
 jobs:
   test:
     runs-on: ubuntu-latest

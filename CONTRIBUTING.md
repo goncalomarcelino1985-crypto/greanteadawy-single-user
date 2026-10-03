@@ -67,7 +67,8 @@ npm run screenshots        # when the UI in the README screenshots changed
 - Branch from `main` and keep one topic per pull request. The [pull request template](.github/pull_request_template.md)
   asks what changed, why, and how you tested it; include screenshots or audio for UI and sound changes.
 
-CI runs lint, the unit tests, the Playwright tests and a Docker build on every push and pull request.
+CI (lint, the unit tests, the Playwright tests and a Docker build) is started by hand from the Actions tab, so run
+the checks locally before you push.
 
 ## Working with Claude Code
 

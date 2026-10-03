@@ -76,7 +76,8 @@ spatial audio, the plugin system, writing a plugin, export formats, testing & QA
 | plugins: zip reader, install/trust flow, isolation, serving, MCP tools | `server/test/plugins.test.js` |
 | browser journeys | `e2e/studio.spec.js`, `e2e/unhappy-paths.spec.js`, `e2e/workflow.spec.js` (production tools, analyze_sound, stems), `e2e/workflow-band.spec.js` (band instruments, ffmpeg export), `e2e/workflow-spatial.spec.js` (3D exports), `e2e/workflow-plugins.spec.js` (trust dialog, DSP/sample plugins in renders, generator sandbox, hostile plugins) |
 
-CI (`.github/workflows/ci.yml`) runs lint, unit tests and e2e on every push.
+CI (`.github/workflows/ci.yml`) runs lint, unit tests, e2e and a Docker build when started by hand (Actions → CI →
+*Run workflow*); it does not run on push.
 
 ## Contributing
 
