@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/vidux/GreanTeaDawy/security/advisories/new
+    about: Please report security problems privately, not as a public issue.
+  - name: Questions and ideas
+    url: https://github.com/vidux/GreanTeaDawy/discussions
+    about: Ask how to do something, share a track or talk through an idea before it becomes a feature request.
+  - name: Documentation
+    url: https://github.com/vidux/GreanTeaDawy/tree/main/docs
+    about: Getting started, the user guide, connecting Claude, the MCP reference, plugins and deployment.

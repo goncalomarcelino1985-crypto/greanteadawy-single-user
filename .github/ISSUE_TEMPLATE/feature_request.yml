@@ -1,0 +1,73 @@
+name: Feature request
+description: Suggest a new feature, instrument, effect, MCP tool or workflow improvement.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem first and the solution second — there is often more than one way to solve it. Not sure
+        it's a good fit? Start a [discussion](https://github.com/vidux/GreanTeaDawy/discussions) instead.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The task or the music you're making, and what gets in the way today.
+      placeholder: I record vocals and want them tight to the beat, but I have to drag every phrase by hand.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to happen?
+      description: How it would look and behave in the studio. Mockups or screenshots are welcome.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Studio UI (windows, editing, keyboard, layout)
+        - Instruments and presets
+        - Effects, mixer or automation
+        - Rendering and export
+        - Claude / MCP tools
+        - Samples, wave editor, pitch correction or recording
+        - Plugins
+        - Accounts, settings or deployment
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: claude
+    attributes:
+      label: Should Claude be able to do it too?
+      description: |
+        If this should also work over MCP: which tool should change, or what would a new tool take and return?
+        An example prompt you'd give Claude helps.
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: How do other DAWs or tools handle it?
+      description: A reference workflow from another DAW, plugin or hardware, if there is one.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or workarounds
+      description: Other solutions you considered, or what you do today instead.
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I searched the existing issues and this hasn't been requested yet.
+          required: true
+        - label: I'd like to work on this myself (see CONTRIBUTING.md).

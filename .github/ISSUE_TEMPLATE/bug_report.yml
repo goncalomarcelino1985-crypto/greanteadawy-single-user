@@ -1,0 +1,120 @@
+name: Bug report
+description: Something in the studio, the sound, an export or Claude's MCP tools doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. **Security problems** (data visible to another account, a way
+        around sign-in or the plugin sandbox, …) must not go here — please use the private
+        [security advisory form](https://github.com/vidux/GreanTeaDawy/security/advisories/new) instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What went wrong, and what did you expect instead?
+      placeholder: After undoing a piano-roll edit, the notes come back one octave lower. I expected the original notes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The shortest path from a fresh project (or a genre template) to the problem.
+      placeholder: |
+        1. New project from the "Trap" template
+        2. Open the piano roll on "Lead", select all notes and press ↓
+        3. Ctrl+Z
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Studio UI (windows, editing, keyboard, layout)
+        - Sound or playback (instruments, effects, mixer, automation)
+        - Rendering and export (WAV, MP3/AAC/…, stems, MIDI, spatial)
+        - Claude / MCP tools
+        - Samples, wave editor, pitch correction or recording
+        - Plugins
+        - Accounts, sign-in, settings or live sync
+        - Install, Docker or deployment
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: mcp
+    attributes:
+      label: Claude / MCP details
+      description: |
+        Only for MCP problems: which client (Claude Code, Claude Desktop, claude.ai), connected over stdio or HTTP,
+        the tool that misbehaved, its arguments and the reply. **Remove API tokens (`gtd_…`) first.**
+      render: text
+
+  - type: input
+    id: version
+    attributes:
+      label: GreanTeaDawy version
+      description: Shown in the About dialog (the ⓘ button at the top right of the studio), or `version` in package.json.
+      placeholder: "0.7.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How do you run it?
+      options:
+        - npm start (built client)
+        - npm run dev
+        - Docker / docker compose
+        - Other (say below)
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and operating system
+      placeholder: Chrome 141 on Windows 11
+    validations:
+      required: true
+
+  - type: input
+    id: server
+    attributes:
+      label: Server environment
+      description: Node version, server OS, whether ffmpeg is installed, and any reverse proxy in front.
+      placeholder: Node 22.20, Ubuntu 24.04, ffmpeg 7.1, behind Caddy
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Errors from the browser console (F12) and the server log. **Remove tokens, setup codes and cookies first.**
+      render: text
+
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Project file, screenshots or audio
+      description: |
+        For problems with a particular song, attach the project file (◆ menu → *Export project file (.json)*).
+        Screenshots, a short screen recording or an audio clip of a sound problem help a lot. Drag files into this box.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and this hasn't been reported yet.
+          required: true
+        - label: I removed API tokens, setup codes, passwords and cookies from everything above.
+          required: true

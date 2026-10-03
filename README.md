@@ -261,8 +261,9 @@ vulnerabilities privately.
 
 ## Contributing
 
-Issues and pull requests are welcome. Please run `npm run lint && npm test && npm run test:e2e` and update the docs with
-your change — see [docs/development.md](docs/development.md).
+Issues and pull requests are welcome — read [CONTRIBUTING.md](CONTRIBUTING.md) first. Please run
+`npm run lint && npm test && npm run test:e2e` and update the docs with your change; the repo layout and conventions are
+in [docs/development.md](docs/development.md).
 
 ## Licence
 

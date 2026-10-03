@@ -80,6 +80,8 @@ CI (`.github/workflows/ci.yml`) runs lint, unit tests and e2e on every push.
 
 ## Contributing
 
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for how to report bugs, propose features and open pull requests. In short:
+
 1. Fork, branch from `main`.
 2. Make the change with tests; run `npm run lint && npm test && npm run test:e2e`.
 3. Update docs (and `npm run docs:mcp` / `npm run screenshots` when relevant).
