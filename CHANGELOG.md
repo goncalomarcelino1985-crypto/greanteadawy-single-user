@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.1 — ten new genre templates
+
+- Ten new genre templates, each pre-mixed with shared reverb/delay buses and (where there is a kick) kick-keyed
+  sidechain: **UK Drill** (sliding 808, 3-3-2 hats, dark piano over strings), **Afrobeats** (tresillo kick, congas,
+  highlife guitar, finger bass), **Reggaeton** (dembow, nylon-guitar arpeggios, plucked hook), **Liquid Drum & Bass**
+  (two-step at 174, reese bass, Rhodes), **Synthwave** (big-room snare, tom runs, FM bass, arp, saw lead), **Disco
+  Funk** (slap bass, muted 16th guitar, brass stabs, strings), **Neo-Soul** (lazy swung beat, Rhodes in rootless
+  voicings, organ), **Bossa Nova** (batida guitar, upright bass, clave, breathy flute), **Cinematic** (felt piano,
+  solo cello, staccato strings, taiko, a reverse swell into a tam-tam) and **Beatbox Jam** (the beatbox collection
+  with a lip bass and a hummed hook). 18 templates in all.
+
 ## 0.7.0 — sample library folders, wave editor, pitch correction, audio recording
 
 **Sample library** (Browser → Samples)

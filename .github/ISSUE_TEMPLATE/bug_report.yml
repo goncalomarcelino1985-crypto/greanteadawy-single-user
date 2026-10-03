@@ -62,7 +62,7 @@ body:
     attributes:
       label: GreanTeaDawy version
       description: Shown in the About dialog (the ⓘ button at the top right of the studio), or `version` in package.json.
-      placeholder: "0.7.0"
+      placeholder: "0.7.1"
     validations:
       required: true
 

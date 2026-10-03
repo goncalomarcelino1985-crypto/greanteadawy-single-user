@@ -1,6 +1,6 @@
 {
   "name": "@greanteadawy/core",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Shared project model, edit operations, music theory, MIDI and summaries for GreanTeaDawy",
   "license": "MIT",
   "type": "module",

@@ -193,13 +193,13 @@ List the user's saved projects (id, name, bpm, last update). * marks the active 
 
 ### `create_project`
 
-Create a new project, make it active and open it in the browser. Templates: default (Default (4 drum channels)), empty (Empty project), trap (Trap (140 BPM, C minor)), house (Deep House (124 BPM, A minor)), boombap (Boom Bap (90 BPM, swing)), lofi (Lo-fi Hip Hop (80 BPM)), techno (Acid Techno (132 BPM)), band (Pop Band (96 BPM, G major: piano, guitar, bass, strings)), indian (Indian Fusion (92 BPM, C bhairav: sitar, tabla, tanpura, bansuri, harmonium)), eastasian (East Asian Lo-fi (82 BPM, D hirajoshi: koto, shakuhachi, taiko)). Use "empty" to start from scratch, "default" for the standard 4 drum channels (kick, clap, hat, snare).
+Create a new project, make it active and open it in the browser. Templates: default (Default (4 drum channels)), empty (Empty project), trap (Trap (140 BPM, C minor)), house (Deep House (124 BPM, A minor)), boombap (Boom Bap (90 BPM, swing)), lofi (Lo-fi Hip Hop (80 BPM)), techno (Acid Techno (132 BPM)), band (Pop Band (96 BPM, G major: piano, guitar, bass, strings)), indian (Indian Fusion (92 BPM, C bhairav: sitar, tabla, tanpura, bansuri, harmonium)), eastasian (East Asian Lo-fi (82 BPM, D hirajoshi: koto, shakuhachi, taiko)), drill (UK Drill (142 BPM, G harmonic minor: sliding 808, dark piano)), afrobeats (Afrobeats (104 BPM, Bb major: congas, highlife guitar)), reggaeton (Reggaeton (94 BPM, B minor: dembow, nylon guitar)), dnb (Liquid Drum & Bass (174 BPM, F minor: reese bass, Rhodes)), synthwave (Synthwave (100 BPM, A minor: FM bass, arps, saw lead)), disco (Disco Funk (118 BPM, E dorian: slap bass, muted guitar, brass)), neosoul (Neo-Soul (84 BPM, Eb major: Rhodes, finger bass, organ)), bossanova (Bossa Nova (128 BPM, C major: nylon guitar, upright bass, flute)), cinematic (Cinematic (90 BPM, D minor: strings, solo cello, taiko)), beatbox (Beatbox Jam (92 BPM, E minor: mouth drums, lip bass, hummed hook)). Use "empty" to start from scratch, "default" for the standard 4 drum channels (kick, clap, hat, snare).
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `name` | string | yes | Project name |
 | `bpm` | number |  |  |
-| `template` | `default` \| `empty` \| `trap` \| `house` \| `boombap` \| `lofi` \| `techno` \| `band` \| `indian` \| `eastasian` |  | Starter template (default "empty") |
+| `template` | `default` \| `empty` \| `trap` \| `house` \| `boombap` \| `lofi` \| `techno` \| `band` \| `indian` \| `eastasian` \| `drill` \| `afrobeats` \| `reggaeton` \| `dnb` \| `synthwave` \| `disco` \| `neosoul` \| `bossanova` \| `cinematic` \| `beatbox` |  | Starter template (default "empty") |
 | `key` | string |  | Key root, e.g. "C", "F#" (used for roman-numeral chords and the piano roll scale highlight) |
 | `scale` | `major` \| `minor` \| `harmonicMinor` \| `melodicMinor` \| `dorian` \| `phrygian` \| `lydian` \| `mixolydian` \| `locrian` \| `majorPentatonic` \| `minorPentatonic` \| `blues` \| `hirajoshi` \| `inSen` \| `iwato` \| `yo` \| `bhairav` \| `todi` \| `purvi` \| `marwa` \| `chromatic` |  |  |
 | `timeSignature` | string |  | e.g. "4/4", "3/4", "6/8" |

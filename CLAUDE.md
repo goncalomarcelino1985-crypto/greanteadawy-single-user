@@ -16,7 +16,8 @@ packages/core/   @greanteadawy/core — shared by server AND browser (keep it de
   src/spatial.js      3D object coordinates, speaker layouts (5.1/7.1/7.1.4), panning gains, ADM XML
   src/plugins.js      plugin manifest validation, permissions, param values, cleaning generator output
   src/music.js        notes, scales, chords, roman numerals     src/notation.js  step strings ("x---x---")
-  src/builders.js     chord/bass/melody/roll generators          src/templates.js genre starter projects
+  src/builders.js     chord/bass/melody/roll generators
+  src/templates.js    genre starter projects: build() + the menu order; each genre is src/templates/<id>.js { label, spec }
   src/analysis.js     LUFS/peak/spectrum/tempo/key/pitch + createLevelMeter (streaming, used for render stems)
   src/audioedit.js    sample edits on clips { sampleRate, channels } (cut/paste/fades/gain/normalize/reverse/speed/stretch…),
                       applyEdit = one named op (what edit_sample sends); every op returns a NEW clip (undo keeps old ones)

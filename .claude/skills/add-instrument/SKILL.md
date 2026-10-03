@@ -53,7 +53,8 @@ the definition.
    - Level it against the existing instruments with `analyze_sound` (a held C5 at velocity 0.8: sustained leads
      ≈ −21 LUFS, plucked models −25…−27, kick −17, snare −22, closed hats −30…−33).
    - Never create nodes that run forever (LFOs, noise) without stopping them with the voice.
-3. **Templates / builders** (optional): use it in `packages/core/src/templates.js` if it fits a genre.
+3. **Templates / builders** (optional): use it in a genre file in `packages/core/src/templates/` if it fits a genre
+   (a new genre is a new file there, imported and listed in `GENRES` in `templates.js`).
 4. **Tests**: add a case to `packages/core/test/core.test.js` (definition sanity: `makeInstrument('pluck', 'Harp')`
    returns all params, strict validation rejects out-of-range values).
 5. **Check** in the browser: `npm run dev`, add the instrument from the Browser, play notes from the computer keyboard,

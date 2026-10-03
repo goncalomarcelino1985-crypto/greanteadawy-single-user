@@ -445,6 +445,41 @@ test('world templates: Indian Fusion and East Asian Lo-fi use the collections; t
   assert.deepEqual(asia.markers.map((m) => m.name), ['Intro', 'Verse', 'Taiko']);
 });
 
+test('genre templates: reverbs on send buses, kick sidechains, every part inside its pattern, heard and in the scale', async () => {
+  const { createProjectFromTemplate, INSTRUMENTS, scalePitchClasses } = await import('../src/index.js');
+  const genres = ['drill', 'afrobeats', 'reggaeton', 'dnb', 'synthwave', 'disco', 'neosoul', 'bossanova', 'cinematic', 'beatbox'];
+  for (const t of genres) {
+    const p = createProjectFromTemplate(t);
+    const fed = new Set(p.mixer.flatMap((m) => m.sends.map((s) => s.to)));
+    p.mixer.forEach((m, i) => {
+      if (m.effects.some((e) => e.type === 'reverb')) assert.ok(fed.has(i), `${t}: reverb on ${m.name} is not a send bus`);
+    });
+    const kick = p.channels.find((c) => c.name === 'Kick');
+    for (const fx of p.mixer.flatMap((m) => m.effects)) if (fx.type === 'pump') assert.equal(fx.params.source, kick?.id, `${t}: pump keyed by the kick`);
+    const placed = p.patterns.filter((pt) => p.playlist.clips.some((c) => c.refId === pt.id));
+    for (const pt of p.patterns) for (const n of Object.values(pt.notes).flat()) assert.ok(n.start + n.length <= pt.length, `${t}: ${pt.name} runs past its end`);
+    for (const c of p.channels) assert.ok(placed.some((pt) => pt.notes[c.id]?.length), `${t}: ${c.name} never plays`);
+    // bossa nova's II7 and bII7 are chromatic on purpose
+    if (t === 'bossanova') continue;
+    const pcs = scalePitchClasses(p.key, p.scale);
+    for (const c of p.channels.filter((ch) => INSTRUMENTS[ch.instrument.kind].melodic)) {
+      for (const n of p.patterns.flatMap((pt) => pt.notes[c.id] || [])) assert.ok(pcs.includes(n.key % 12), `${t}: ${c.name} plays ${n.key} outside ${p.key} ${p.scale}`);
+    }
+  }
+  assert.equal(createProjectFromTemplate('dnb').bpm, 174);
+  assert.equal(createProjectFromTemplate('drill', { key: 'A' }).key, 'A');
+});
+
+test('template labels state the tempo their project is built at', async () => {
+  const { TEMPLATES, createProjectFromTemplate } = await import('../src/index.js');
+  for (const [id, t] of Object.entries(TEMPLATES)) {
+    if (id === 'default' || id === 'empty') continue;
+    const { bpm } = createProjectFromTemplate(id);
+    assert.equal(t.bpm, bpm, id);
+    assert.ok(t.label.includes(`(${bpm} BPM`), `${id}: "${t.label}" should say ${bpm} BPM`);
+  }
+});
+
 test('melody strings: "~" slides into the next note, "!" accents, junk after a length is refused', async () => {
   const { melodyFromString, romanToChord } = await import('../src/index.js');
   const { melodyLength } = await import('../src/index.js');

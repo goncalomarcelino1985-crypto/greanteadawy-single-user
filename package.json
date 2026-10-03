@@ -1,6 +1,6 @@
 {
   "name": "greanteadawy",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "GreanTeaDawy - a browser-based, pattern-and-playlist DAW (Node.js + React) with an MCP server so Claude can make beats with you.",
   "license": "MIT",

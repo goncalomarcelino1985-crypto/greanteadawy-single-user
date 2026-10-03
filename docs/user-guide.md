@@ -276,7 +276,8 @@ sung with slides, or a short passing note right after a note with a wide vibrato
 ## Projects, versions, import & export
 
 - **Projects** tab: new project from a template (Default, Empty, Trap, Deep House, Boom Bap, Lo-fi, Acid Techno, Pop Band,
-  Indian Fusion, East Asian Lo-fi), open, duplicate, delete.
+  Indian Fusion, East Asian Lo-fi, UK Drill, Afrobeats, Reggaeton, Liquid Drum & Bass, Synthwave, Disco Funk, Neo-Soul,
+  Bossa Nova, Cinematic, Beatbox Jam), open, duplicate, delete.
 - **Versions** (menu → Versions…): named snapshots of the current project. Restore any version (undoable); Claude can
   also save versions before risky changes.
 - **Export** (menu): the song as a **16-bit** (dithered, for sharing) or **24-bit** (for mastering) WAV, the pattern loop

@@ -1,6 +1,6 @@
 {
   "name": "@greanteadawy/server",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "GreanTeaDawy backend: REST API, WebSocket live sync and MCP server (stdio + Streamable HTTP)",
   "license": "MIT",
   "type": "module",
