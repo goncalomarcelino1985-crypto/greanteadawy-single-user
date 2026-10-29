@@ -23,7 +23,7 @@ const stage = (name) => { report.stage = name; console.log(`Music demo: ${name}`
 const writeJson = (name, value) => fs.writeFile(path.join(output, name), `${JSON.stringify(value, null, 2)}\n`);
 const musicalState = (project) => {
   const copy = structuredClone(project);
-  for (const key of ['rev', 'createdAt', 'updatedAt']) delete copy[key];
+  for (const key of ['rev', 'createdAt', 'updatedAt', 'ownerId']) delete copy[key];
   return copy;
 };
 const portable = (project) => {

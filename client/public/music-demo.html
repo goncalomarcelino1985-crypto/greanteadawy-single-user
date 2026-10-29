@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GM AI WORKER — demonstração musical</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #edf3ef; background: #101713; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1080px; margin: auto; padding: 42px 24px 28px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 36px; }
+    h1 { margin: 7px 0 12px; font-size: clamp(28px, 5vw, 44px); letter-spacing: -.04em; }
+    h2 { font-size: 22px; margin: 0 0 14px; }
+    h3 { font-size: 17px; margin: 0 0 12px; }
+    p { color: #b9c9be; line-height: 1.6; margin: 8px 0 16px; }
+    a { color: #b0ed9d; text-underline-offset: 3px; }
+    .tag { font-size: 12px; letter-spacing: .12em; color: #b0ed9d; text-transform: uppercase; }
+    .button, button { display: inline-block; padding: 12px 18px; border-radius: 8px; background: #b0ed9d; color: #172311; border: 0; font: inherit; font-weight: 650; text-decoration: none; cursor: pointer; }
+    .button { white-space: nowrap; }
+    button:disabled { opacity: .5; cursor: wait; }
+    section { margin-top: 30px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .card { background: #1b251e; border: 1px solid #344237; border-radius: 12px; padding: 20px; }
+    .changed { border-color: #87ad74; }
+    audio { display: block; width: 100%; margin: 14px 0; }
+    .note, .facts { font-size: 14px; }
+    .facts { display: flex; flex-wrap: wrap; gap: 8px 18px; color: #c5d5c9; line-height: 1.8; }
+    .facts span { white-space: nowrap; }
+    .upload { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; }
+    label { display: grid; gap: 10px; flex: 1; min-width: 240px; }
+    input { max-width: 100%; font: inherit; }
+    input::file-selector-button { padding: 9px 12px; background: #344237; color: #edf3ef; border: 0; border-radius: 6px; margin-right: 12px; }
+    #status, #upload-status { min-height: 24px; }
+    #uploaded { margin-top: 20px; }
+    footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #344237; font-size: 13px; }
+    :focus-visible { outline: 3px solid #c5f7b4; outline-offset: 4px; }
+    @media (max-width: 650px) { header { display: block; } header .button { margin-top: 8px; } .grid { grid-template-columns: 1fr; } main { padding: 28px 18px; } }
+  </style>
+  <script src="/music-demo.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <span class="tag">Estúdio pessoal · ambiente de teste</span>
+        <h1>GM AI WORKER</h1>
+        <p>Uma música real. Quatro pistas. Uma alteração que podes ouvir.</p>
+      </div>
+      <a class="button" href="/">Abrir a DAW</a>
+    </header>
+
+    <section aria-labelledby="compare-title">
+      <h2 id="compare-title">Ouve a diferença</h2>
+      <p>Excerto de 30 segundos de “A Better Way”. Na versão alterada, a bateria entra depois de quatro compassos e o baixo está 3 dB mais baixo.</p>
+      <div class="grid">
+        <article class="card">
+          <h3>Original preservado</h3>
+          <audio controls preload="metadata" src="/api/exports/original-daw.wav" aria-label="Ouvir o original"></audio>
+          <a href="/api/exports/original-daw.wav" download>Descarregar original WAV</a>
+        </article>
+        <article class="card changed">
+          <h3>Arranjo alterado</h3>
+          <audio controls preload="metadata" src="/api/exports/altered-daw.wav" aria-label="Ouvir o arranjo alterado"></audio>
+          <a href="/api/exports/altered-daw.wav" download>Descarregar resultado WAV</a>
+        </article>
+      </div>
+      <p class="note">Grelha de edição: 126 BPM. A gravação original é indicada como 118 BPM; a sua velocidade não foi alterada. Os WAVs exportados incluem a cauda de áudio da DAW.</p>
+      <div id="original-analysis" class="facts" aria-label="Análise do excerto original"></div>
+    </section>
+
+    <section aria-labelledby="stems-title">
+      <h2 id="stems-title">Explora as quatro pistas separadas</h2>
+      <p>Ouve cada stem isoladamente. Na DAW podes modificar o arranjo e usar Undo para desfazer as alterações.</p>
+      <p id="status" role="status">A carregar as pistas do estúdio…</p>
+      <div id="stems" class="grid"></div>
+      <p class="note">Separação online demonstrada neste excerto. Separar um WAV novo ainda requer executar processamento separado; não existe botão automático.</p>
+    </section>
+
+    <section class="card" aria-labelledby="upload-title">
+      <h2 id="upload-title">Carrega e ouve um WAV teu</h2>
+      <p>O ficheiro é enviado para este estúdio de teste e analisado no servidor. Depois fica disponível em Samples, dentro da DAW.</p>
+      <form id="upload-form" class="upload">
+        <label for="wav-file">Ficheiro WAV, até 50 MB
+          <input id="wav-file" name="file" type="file" accept=".wav,audio/wav,audio/x-wav" required>
+        </label>
+        <button id="upload-button" type="submit">Carregar e analisar</button>
+      </form>
+      <p id="upload-status" role="status" aria-live="polite"></p>
+      <div id="uploaded"></div>
+    </section>
+
+    <footer>
+      <p>“<a href="https://ccmixter.org/files/Rataxes/65367" rel="noreferrer">A Better Way</a>”, de Rataxes com Snowflake, sob licença <a href="https://creativecommons.org/licenses/by/3.0/" rel="noreferrer">CC BY 3.0</a>. Demonstração: excerto dos 60 aos 90 segundos, separação em stems e alteração do arranjo. Sem associação ou aprovação dos artistas.</p>
+      <p>Ambiente de teste: descarrega os resultados antes de terminar; persistência em pausa.</p>
+    </footer>
+  </main>
+</body>
+</html>
