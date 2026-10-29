@@ -10,7 +10,6 @@ import { getEngine } from '../audio/index.js';
 import { DND_SAMPLE } from '../lib/dnd.js';
 
 const AUDIO_ACCEPT = 'audio/*,.wav,.mp3,.ogg,.opus,.flac,.aif,.aiff,.m4a,.aac,.webm';
-const COLLAPSED_KEY = 'gtd.sampleFolders.collapsed';
 
 /** Run an async UI action; failures become an error toast instead of an uncaught rejection. */
 const guard = (fn) => Promise.resolve().then(fn).catch((e) => useStore.getState().toast(e.message || String(e), 'error'));
@@ -27,13 +26,6 @@ export function sampleSearchText(s, folderName = '') {
   const tags = Object.values(s.metadata?.tags || {}).join(' ');
   return [s.name, folderName, tags, a.character, a.kind, a.pitch?.note, a.key ? `${a.key.key} ${a.key.scale}` : '', a.tempo ? `${a.tempo.bpm} bpm` : ''].join(' ').toLowerCase();
 }
-
-const readCollapsed = () => {
-  try { return new Set(JSON.parse(localStorage.getItem(COLLAPSED_KEY) || '[]')); } catch { return new Set(); }
-};
-const writeCollapsed = (set) => {
-  try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...set])); } catch { /* private mode: not remembered */ }
-};
 
 /** "Beat 1 (channel Vox, 3 clips)" for each project that uses a sample. */
 const usageText = (list) => list.map((u) => `${u.projectName} (${[u.channels.length ? `channel${u.channels.length > 1 ? 's' : ''} ${u.channels.join(', ')}` : '', u.clips ? `${u.clips} clip${u.clips > 1 ? 's' : ''}` : ''].filter(Boolean).join(', ')})`).join(', ');
@@ -112,7 +104,8 @@ export function SampleLibrary() {
   const samples = useStore((s) => s.samples);
   const folders = useStore((s) => s.sampleFolders);
   const [query, setQuery] = useState('');
-  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const collapsedFolders = useStore((s) => s.collapsedSampleFolders);
+  const collapsed = new Set(collapsedFolders);
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState(() => new Set());
   const [openId, setOpenId] = useState(null);
@@ -136,12 +129,11 @@ export function SampleLibrary() {
   // what "All" selects: the rows that are visible (open folders, the current search)
   const visibleRows = flat ? visible : groups.filter((g) => words.length > 0 || !collapsed.has(g.key)).flatMap((g) => g.items);
 
-  const toggleCollapsed = (key) => setCollapsed((c) => {
-    const n = new Set(c);
+  const toggleCollapsed = (key) => {
+    const n = new Set(useStore.getState().collapsedSampleFolders);
     if (n.has(key)) n.delete(key); else n.add(key);
-    writeCollapsed(n);
-    return n;
-  });
+    st.setPref('collapsedSampleFolders', [...n]);
+  };
   const toggleSelected = (id) => setSelected((cur) => {
     const n = new Set(cur);
     if (n.has(id)) n.delete(id); else n.add(id);

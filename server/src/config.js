@@ -28,12 +28,31 @@ function envInt(v, def, min = -Infinity, max = Infinity) {
   return Math.min(max, Math.max(min, n));
 }
 
+/** Non-secret binding and server-only credentials share one parser, including maintenance commands. */
+export function cloudConfig(env = process.env, prefix = 'CLOUD_') {
+  return {
+    binding: env[`${prefix}BINDING_JSON`],
+    databaseUrl: env[`${prefix}DATABASE_URL`],
+    endpoint: env[`${prefix}OBJECT_ENDPOINT`],
+    bucket: env[`${prefix}OBJECT_BUCKET`],
+    accessKeyId: env[`${prefix}OBJECT_ACCESS_KEY_ID`],
+    secretAccessKey: env[`${prefix}OBJECT_SECRET_ACCESS_KEY`],
+    region: env[`${prefix}OBJECT_REGION`],
+    workspaceId: env[`${prefix}WORKSPACE_ID`],
+    // Kept only to fail closed for obsolete configurations; never runs DDL.
+    initializeSchema: env[`${prefix}INITIALIZE_SCHEMA`] === 'true',
+    initializeEmpty: env[`${prefix}INITIALIZE_EMPTY`] === 'true'
+  };
+}
+
 export function loadConfig(env = process.env) {
   const host = env.HOST || '127.0.0.1';
   return {
     singleUser: env.SINGLE_USER === 'true',
     privateAccessKey: env.PRIVATE_ACCESS_KEY || '',
     ephemeralStorage: env.EPHEMERAL_STORAGE === 'true',
+    storageMode: env.STORAGE_MODE || 'local',
+    cloud: cloudConfig(env),
     port: envInt(env.PORT, 3001, 0, 65535),
     host,
     // relative paths are relative to the repository root (npm scripts run from different folders)

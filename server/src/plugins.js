@@ -203,10 +203,11 @@ function missingFiles(e) {
 }
 
 export class PluginStore {
-  constructor(dataDir) {
+  constructor(dataDir, { cloud = null } = {}) {
     this.root = path.join(dataDir, 'plugins');
     this.pending = new Map(); // token → { userId, manifest, files, sha256, bytes, expires }
     this.locks = new Map();
+    this.cloud = cloud;
   }
 
   async init() {
@@ -314,6 +315,7 @@ export class PluginStore {
       list.push(entry);
       list.sort((a, b) => a.name.localeCompare(b.name));
       await this.saveRegistry(userId, list);
+      this.cloud?.forgetPrefix(dir);
       return entry;
     });
   }
@@ -337,11 +339,14 @@ export class PluginStore {
       // pre-release layout (<user>/<id>/) — never the names this layout itself uses
       if (!['installed', 'registry.json'].includes(id)) await fs.rm(path.join(this.userDir(userId), id), { recursive: true, force: true });
       await this.saveRegistry(userId, list.filter((x) => x.id !== id));
+      this.cloud?.forgetPrefix(this.pluginDir(userId, id));
+      if (!['installed', 'registry.json'].includes(id)) this.cloud?.forgetPrefix(path.join(this.userDir(userId), id));
     });
   }
 
   async removeUser(userId) {
     await fs.rm(this.userDir(userId), { recursive: true, force: true });
+    this.cloud?.forgetPrefix(this.userDir(userId));
   }
 
   /** An enabled plugin of this user (404 otherwise — also for other users' plugins). */
@@ -354,7 +359,9 @@ export class PluginStore {
 
   async code(userId, entry) {
     if (!entry.manifest.main) throw httpError(404, 'This plugin has no code');
-    const code = await fs.readFile(path.join(this.pluginDir(userId, entry.id), entry.manifest.main), 'utf8').catch(missingFiles);
+    const file = path.join(this.pluginDir(userId, entry.id), entry.manifest.main);
+    if (this.cloud) await this.cloud.ensureFile(file);
+    const code = await fs.readFile(file, 'utf8').catch(missingFiles);
     if (checkPluginCode(code).length) throw httpError(409, 'Plugin code failed its safety check'); // re-checked on every load
     return code;
   }
@@ -363,7 +370,9 @@ export class PluginStore {
   async sample(userId, entry, rel) {
     const zone = entry.manifest.samples.find((z) => z.file === rel);
     if (!zone) throw httpError(404, 'Not a sample of this plugin');
-    const data = await fs.readFile(path.join(this.pluginDir(userId, entry.id), zone.file)).catch(missingFiles);
+    const file = path.join(this.pluginDir(userId, entry.id), zone.file);
+    if (this.cloud) await this.cloud.ensureFile(file);
+    const data = await fs.readFile(file).catch(missingFiles);
     return { data, mime: AUDIO_MIME[zone.file.split('.').pop().toLowerCase()] || 'application/octet-stream' };
   }
 }

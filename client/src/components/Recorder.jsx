@@ -14,16 +14,7 @@ import { openSampleEditor } from '../lib/actions.js';
 import { deleteSamplesWithWarning } from './SampleLibrary.jsx';
 import { fmtTime } from './WaveEditor.jsx';
 
-const PREFS_KEY = 'gtd.recorder';
 const MAX_SECONDS = 600;
-const DEFAULTS = { deviceId: '', channels: 1, along: 'song', countIn: 1, metronome: true, place: true, monitor: false, echo: false, noise: false, agc: false, offsetMs: 0 };
-
-const readPrefs = () => {
-  try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { return { ...DEFAULTS }; }
-};
-const writePrefs = (p) => {
-  try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch { /* not remembered */ }
-};
 const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 export function Recorder() {
@@ -32,7 +23,7 @@ export function Recorder() {
   const projectName = useStore((s) => s.project?.name);
   const openRef = useRef(open);
   openRef.current = open;
-  const [opts, setOpts] = useState(readPrefs);
+  const opts = useStore((s) => s.recorderPreferences);
   const [devices, setDevices] = useState([]);
   const [mic, setMic] = useState(null);
   const [phase, setPhase] = useState('off'); // off | arming | ready | countin | recording | saving
@@ -55,11 +46,7 @@ export function Recorder() {
     return () => { window.removeEventListener('beforeunload', warn); useStore.setState({ recorderBusy: false }); };
   }, [holding]);
 
-  const set = (patch) => setOpts((o) => {
-    const n = { ...o, ...patch };
-    writePrefs(n);
-    return n;
-  });
+  const set = (patch) => st.setPref('recorderPreferences', { ...useStore.getState().recorderPreferences, ...patch });
 
   // closing the window releases the microphone (a take in progress is saved first)
   useEffect(() => {

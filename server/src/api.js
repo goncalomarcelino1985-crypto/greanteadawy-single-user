@@ -21,7 +21,7 @@ export function isLargeBodyRoute(req) {
 }
 const largeJson = express.json({ limit: '20mb' });
 
-export function createApiRouter({ store, samples, users, hub, auth, config, publicUrl, ffmpeg = defaultFfmpeg(), plugins = null }) {
+export function createApiRouter({ store, samples, users, hub, auth, config, publicUrl, ffmpeg = defaultFfmpeg(), plugins = null, cloud = null }) {
   const r = express.Router();
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: config.maxUploadMb * 1024 * 1024, files: 1 } });
   // rendered mixdowns can be large: stream them to a temp file in the user's exports folder instead of memory
@@ -34,10 +34,10 @@ export function createApiRouter({ store, samples, users, hub, auth, config, publ
       filename: (req, file, cb) => cb(null, `.upload-${uid('up')}.part`)
     }),
     // the WAV (RIFF) format's own limit: long multichannel spatial renders get big (7.1.4 ≈ 100 MB per minute)
-    limits: { fileSize: 4095 * 1024 * 1024, files: 1, fieldSize: 2 * 1024 * 1024 }
+    limits: { fileSize: (config.storageMode === 'cloud' ? 50 : 4095) * 1024 * 1024, files: 1, fieldSize: 2 * 1024 * 1024 }
   });
   const pluginsAllowed = () => !!plugins && config.pluginsEnabled !== false && users.settings.allowPlugins !== false;
-  const backendFor = (user) => createLocalBackend({ store, samples, users, hub, user, publicUrl, ffmpeg, plugins, pluginsAllowed });
+  const backendFor = (user) => createLocalBackend({ store, samples, users, hub, user, publicUrl, ffmpeg, plugins, pluginsAllowed, cloud });
   const pluginUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 1 } });
 
   r.get('/health', (req, res) => res.json({ ok: true }));
@@ -73,7 +73,7 @@ export function createApiRouter({ store, samples, users, hub, auth, config, publ
   }));
   r.post('/projects/:id/ops', largeJson, wrap(async (req, res) => {
     const source = req.body?.source === 'mcp' ? 'mcp' : 'api';
-    const p = await store.applyOps(req.params.id, req.body?.ops, { source, clientId: req.body?.clientId, userId: req.user.id, undoable: source === 'mcp' });
+    const p = await store.applyOps(req.params.id, req.body?.ops, { source, clientId: req.body?.clientId, userId: req.user.id, undoable: source === 'mcp', operationId: req.body?.operationId });
     res.json({ rev: p.rev, project: p });
   }));
   r.post('/projects/:id/undo', wrap(async (req, res) => {
@@ -153,6 +153,7 @@ export function createApiRouter({ store, samples, users, hub, auth, config, publ
     for (let i = 1; i < 1000; i++) {
       const name = `${base}${i > 1 ? `-${i}` : ''}.wav`;
       const dest = path.join(dir, name);
+      if (cloud && await cloud.fileExists(dest)) continue;
       try {
         await (await fs.open(dest, 'wx')).close();
       } catch (e) {
@@ -194,6 +195,7 @@ export function createApiRouter({ store, samples, users, hub, auth, config, publ
     const base = `${safeFileName(baseName)}-positions`;
     for (let i = 1; i < 1000; i++) {
       const name = `${base}${i > 1 ? `-${i}` : ''}.json`;
+      if (cloud && await cloud.fileExists(path.join(dir, name))) continue;
       try {
         const fh = await fs.open(path.join(dir, name), 'wx');
         try { await fh.writeFile(JSON.stringify(doc, null, 1)); } finally { await fh.close(); }
@@ -323,6 +325,11 @@ export function createApiRouter({ store, samples, users, hub, auth, config, publ
   r.get('/exports/formats', wrap(async (req, res) => res.json(await backendFor(req.user).exportFormats())));
   r.get('/exports', wrap(async (req, res) => {
     const dir = exportsDir(store.dataDir, req.user.id);
+    if (cloud) {
+      const out = (await cloud.listFiles(dir)).filter((file) => EXPORT_NAME.test(file.name))
+        .map((file) => ({ ...file, url: `/api/exports/${encodeURIComponent(file.name)}` }));
+      return res.json(out.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+    }
     let files = [];
     try { files = await fs.readdir(dir); } catch { /* none yet */ }
     const out = [];
@@ -351,11 +358,12 @@ export function createApiRouter({ store, samples, users, hub, auth, config, publ
   }));
   r.get('/exports/:name', wrap(async (req, res) => {
     const file = exportPath(req);
+    if (cloud) await cloud.ensureFile(file);
     try { await fs.access(file); } catch { throw httpError(404, 'Export not found'); }
     res.download(file);
   }));
   r.delete('/exports/:name', wrap(async (req, res) => {
-    await fs.rm(exportPath(req), { force: true });
+    await backendFor(req.user).deleteExport(req.params.name);
     res.json({ ok: true });
   }));
 
@@ -384,20 +392,16 @@ export function createApiRouter({ store, samples, users, hub, auth, config, publ
       res.json(describeSample(s, samples.folderNameOf(s.folderId, req.user.id)));
     } catch (e) { next(e); }
   });
-  r.get('/samples/:id/file', (req, res, next) => {
-    try {
+  r.get('/samples/:id/file', wrap(async (req, res) => {
       const s = samples.get(req.params.id, req.user.id);
-      const file = samples.filePath(req.params.id, req.user.id);
+      const file = await samples.ensureFile(req.params.id, req.user.id);
       // immutable only for the current revision's URL: anything else (no ?v, an old one) is revalidated, so a
       // request racing a replacement can't pin new audio under an old revision's URL (or the other way round)
       res.setHeader('cache-control', req.query.v === String(s.rev || 1) ? 'private, max-age=31536000, immutable' : 'private, no-cache');
       res.setHeader('content-security-policy', "default-src 'none'; sandbox");
       res.type(samples.mimeOf(req.params.id, req.user.id));
       res.sendFile(file);
-    } catch (e) {
-      next(e);
-    }
-  });
+  }));
   // new audio for an existing sample (the wave editor's "Replace original"): every project using it hears the change
   // the sample must be the caller's before a (possibly large) upload is read
   const ownSample = (req, res, next) => { try { samples.get(req.params.id, req.user.id); next(); } catch (e) { next(e); } };

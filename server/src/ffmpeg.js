@@ -191,7 +191,7 @@ export function createFfmpeg({ path: configured = '', timeoutSec = 300, maxJobs 
     }
   }
 
-  async function convertNow({ input, format, bitrate, metadata = {} }) {
+  async function convertNow({ input, format, bitrate, metadata = {}, fileExists }) {
     const f = Object.hasOwn(EXPORT_FORMATS, format) ? EXPORT_FORMATS[format] : null;
     if (!f) throw httpError(400, `Unknown format "${format}". Formats: ${FORMAT_IDS.join(', ')}`);
     if (f.native) throw httpError(400, 'WAV is rendered directly — no conversion needed');
@@ -239,6 +239,7 @@ export function createFfmpeg({ path: configured = '', timeoutSec = 300, maxJobs 
       let out = null;
       for (let i = 1; i < 1000 && !out; i++) {
         const name = `${base}${i > 1 ? `-${i}` : ''}.${f.ext}`;
+        if (fileExists && await fileExists(path.join(dir, name))) continue;
         try {
           await (await fs.open(path.join(dir, name), 'wx')).close();
           out = name;

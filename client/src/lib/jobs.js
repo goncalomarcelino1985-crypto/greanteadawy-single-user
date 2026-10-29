@@ -20,6 +20,10 @@ const MAX_STEMS = 24;
 
 export async function runJob(jobId, job, sync) {
   const st = useStore.getState();
+  if (st.auth.cloudAudioRequired) {
+    sync.send({ type: 'job-error', jobId, message: 'O processamento de áudio deve correr na cloud.' });
+    return;
+  }
   try {
     if (job.kind === 'render') {
       useStore.setState({ busy: 'Claude is rendering the mix…' });
@@ -250,6 +254,7 @@ export async function exportStems(job, { jobId, sync } = {}) {
 
 /** Decode a sample with the browser's codecs, analyse it and store the result on the server. */
 export async function analyzeSampleInBrowser(sampleId) {
+  if (useStore.getState().auth.cloudAudioRequired) throw new Error('A análise de áudio neste computador está desativada.');
   // the revision fetched goes back with the result: the server refuses it if the audio was replaced meanwhile
   const rev = sampleRev(sampleId);
   const res = await fetch(sampleFileUrl(sampleId), { credentials: 'same-origin' });

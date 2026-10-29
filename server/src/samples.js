@@ -320,7 +320,7 @@ function sanitizeAnalysis(a) {
 const unknownLengthOk = (ext) => ext === '.webm' || ext === '.flac' || ext === '.mp3';
 
 export class SampleLibrary extends EventEmitter {
-  constructor(dataDir) {
+  constructor(dataDir, { cloud = null } = {}) {
     super();
     this.dir = path.join(dataDir, 'samples');
     this.indexPath = path.join(this.dir, 'index.json');
@@ -330,6 +330,7 @@ export class SampleLibrary extends EventEmitter {
     this.folders = [];
     this.replacing = new Map(); // sample id -> the replacement in progress
     this.writing = Promise.resolve();
+    this.cloud = cloud;
   }
 
   async init() {
@@ -452,6 +453,12 @@ export class SampleLibrary extends EventEmitter {
     return path.join(this.dir, this.get(id, ownerId).file);
   }
 
+  async ensureFile(id, ownerId) {
+    const file = this.filePath(id, ownerId);
+    if (this.cloud) await this.cloud.ensureFile(file);
+    return file;
+  }
+
   mimeOf(id, ownerId) {
     return MIME_BY_EXT[path.extname(this.get(id, ownerId).file).toLowerCase()] || 'application/octet-stream';
   }
@@ -543,7 +550,11 @@ export class SampleLibrary extends EventEmitter {
     }
     Object.assign(s, facts, { rev: (s.rev || 1) + 1, updatedAt: new Date().toISOString() });
     await this.save(ownerId);
-    if (oldFile !== s.file) await fs.rm(path.join(this.dir, oldFile), { force: true });
+    if (oldFile !== s.file) {
+      const previous = path.join(this.dir, oldFile);
+      await fs.rm(previous, { force: true });
+      this.cloud?.forgetFile(previous);
+    }
     return s;
   }
 
@@ -583,7 +594,13 @@ export class SampleLibrary extends EventEmitter {
   }
 
   async removeFiles(list) {
-    for (const s of list) await fs.rm(path.join(this.dir, s.file), { force: true }).catch(() => {});
+    for (const s of list) {
+      const file = path.join(this.dir, s.file);
+      if (this.cloud) {
+        await fs.rm(file, { force: true });
+        this.cloud.forgetFile(file);
+      } else await fs.rm(file, { force: true }).catch(() => {});
+    }
   }
 
   /** Delete several samples (all ids are checked first, so a bad id deletes nothing). Returns how many went. */

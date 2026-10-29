@@ -13,7 +13,7 @@ const WINDOW = 15 * 60 * 1000;
  * setupCode: first-run setup from anywhere but this computer (isLocal) needs it — it's printed in the server log — so
  * whoever reaches a freshly deployed server first can't claim the admin account.
  */
-export function createAuthRouter({ users, sessions, auth, store, samples, hub, onUserCreated, setupCode = null, isLocal = () => false, plugins = null, singleUser = false, ephemeralStorage = false }) {
+export function createAuthRouter({ users, sessions, auth, store, samples, hub, onUserCreated, setupCode = null, isLocal = () => false, plugins = null, singleUser = false, ephemeralStorage = false, cloudPreferences = false, cloud = null }) {
   const r = express.Router();
   // Password guessing: per username+IP (10), per username from anywhere (100, so one attacker can't
   // easily lock a user out), per IP across accounts (50).
@@ -34,6 +34,8 @@ export function createAuthRouter({ users, sessions, auth, store, samples, hub, o
     return {
       singleUser,
       ephemeralStorage,
+      cloudPreferences,
+      cloudAudioRequired: cloudPreferences,
       setupRequired: users.count() === 0,
       setupCodeRequired: !!setupCode && users.count() === 0 && !isLocal(req),
       user: publicUser(a?.user || null),
@@ -206,6 +208,7 @@ export function createAuthRouter({ users, sessions, auth, store, samples, hub, o
     for (const p of await store.list(target.id)) await store.remove(p.id);
     await samples.removeOwner(target.id);
     await fs.rm(exportsDir(store.dataDir, target.id), { recursive: true, force: true });
+    cloud?.forgetPrefix(exportsDir(store.dataDir, target.id));
     await plugins?.removeUser(target.id);
     await users.remove(target.id);
     res.json({ ok: true });

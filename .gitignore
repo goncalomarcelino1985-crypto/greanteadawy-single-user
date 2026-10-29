@@ -4,6 +4,9 @@ data/
 *.log
 .DS_Store
 .env
+.env.*
+!.env.example
+!.env.*.example
 coverage/
 test-results/
 playwright-report/

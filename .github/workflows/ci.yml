@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, feature/cloud-persistence]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -23,10 +23,54 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: failure() && github.ref == 'refs/heads/main'
         with:
           name: playwright-traces
           path: test-results/
+
+  cloud-storage:
+    # Standard runner in this public repository: synthetic fixtures only.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: gm_test
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: gm_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U gm_test -d gm_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      GM_TEST_CLOUD_ALLOW_WRITE: 'true'
+      GM_TEST_PG_URL: postgres://gm_test:synthetic-ci-only@127.0.0.1:5432/gm_test
+      GM_TEST_S3_ENDPOINT: http://127.0.0.1:9000
+      GM_TEST_S3_BUCKET: gm-synthetic-test
+      GM_TEST_S3_ACCESS_KEY_ID: gm-ci-test
+      GM_TEST_S3_SECRET_ACCESS_KEY: synthetic-ci-only
+      GM_TEST_S3_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Start isolated object storage
+        run: |
+          docker run -d --name gm-s3 -p 127.0.0.1:9000:9000 -e MINIO_ROOT_USER=gm-ci-test -e MINIO_ROOT_PASSWORD=synthetic-ci-only minio/minio:RELEASE.2025-04-22T22-12-26Z server /data
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:9000/minio/health/live && break
+            sleep 2
+          done
+          node --input-type=module <<'JS'
+          import { S3Client, CreateBucketCommand } from '@aws-sdk/client-s3';
+          const client = new S3Client({endpoint:process.env.GM_TEST_S3_ENDPOINT, region:'us-east-1', forcePathStyle:true, credentials:{accessKeyId:process.env.GM_TEST_S3_ACCESS_KEY_ID,secretAccessKey:process.env.GM_TEST_S3_SECRET_ACCESS_KEY}});
+          await client.send(new CreateBucketCommand({Bucket:process.env.GM_TEST_S3_BUCKET}));
+          client.destroy();
+          JS
+      - name: Prove database, object, backup and fresh restore integration
+        run: node --test --test-timeout=120000 server/test/cloud-repository.test.js server/test/cloud-server.test.js server/test/cloud-access.test.js
 
   docker:
     runs-on: ubuntu-latest

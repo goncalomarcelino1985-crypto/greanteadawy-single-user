@@ -24,6 +24,8 @@ import { createLocalBackend } from './backend.js';
 import { createFfmpeg } from './ffmpeg.js';
 import { PluginStore } from './plugins.js';
 import { sandboxRoutes } from './sandbox.js';
+import { connectCloud } from './cloud-provider.js';
+import { createPreferencesRouter } from './preferences.js';
 
 /**
  * (req) => boolean: true when the request has no Origin header (non-browser clients such as MCP clients)
@@ -62,16 +64,19 @@ const CSP = [
 ].join('; ');
 
 export async function createServer(config = loadConfig()) {
+  if (!['local', 'cloud'].includes(config.storageMode || 'local')) throw new Error('Invalid STORAGE_MODE; refusing a local fallback');
+  const cloud = config.cloudWorkspace || await connectCloud(config);
+  if (cloud) config = { ...config, dataDir: cloud.dataDir, ephemeralStorage: false, maxUploadMb: Math.min(50, config.maxUploadMb) };
   const loopback = isLoopback(config.host);
   const users = await new UserStore(config.dataDir, { defaults: { mcpWithoutToken: loopback } }).init();
   const sessions = await new SessionStore(config.dataDir, { ttlDays: config.sessionTtlDays }).init();
   const privateStudio = await createPrivateStudio(config, users);
   const auth = createAuth({ users, sessions, ttlDays: config.sessionTtlDays, privateIdentify: privateStudio?.identify });
-  const store = await new ProjectStore(config.dataDir).init();
-  const samples = await new SampleLibrary(config.dataDir).init();
+  const store = await new ProjectStore(config.dataDir, cloud ? { saveDelay: 0 } : {}).init();
+  const samples = await new SampleLibrary(config.dataDir, { cloud }).init();
   const hub = new Hub({ store, samples, users, sessions });
   const ffmpeg = createFfmpeg({ path: config.ffmpegPath, timeoutSec: config.ffmpegTimeoutSec, maxJobs: config.ffmpegMaxJobs });
-  const plugins = await new PluginStore(config.dataDir).init();
+  const plugins = await new PluginStore(config.dataDir, { cloud }).init();
   const publicUrl = config.publicUrl || `http://${config.host === '0.0.0.0' ? 'localhost' : config.host}:${config.port}`;
   // First run: setting up from anywhere but this computer needs a code from the log, so a freshly deployed (or
   // proxied) server can't be claimed by whoever reaches it first
@@ -103,6 +108,26 @@ export async function createServer(config = loadConfig()) {
   if (privateStudio && !(await store.list(privateStudio.owner.id)).length) {
     const project = await store.create({ ownerId: privateStudio.owner.id, template: 'empty', name: 'Estúdio do Gonçalo' });
     await users.update(privateStudio.owner.id, { activeProjectId: project.id });
+  }
+
+  if (cloud) {
+    // Private cookies are stateless. Token usage telemetry must not schedule
+    // background writes outside the durable transaction boundary.
+    users.touchToken = () => {};
+    cloud.flush = async () => { await store.flush(); await users.writing; await samples.writing; };
+    await cloud.checkpoint();
+    for (const emitter of [store, users, samples]) cloud.bufferEmitter(emitter);
+    cloud.guardMethods(store, ['create', 'duplicate', 'remove', 'applyOps', 'undoLast', 'saveVersion', 'restoreVersion', 'deleteVersion']);
+    cloud.guardMethods(users, ['create', 'update', 'setPassword', 'remove', 'generateToken', 'revokeToken', 'updateSettings']);
+    cloud.guardMethods(samples, ['add', 'update', 'replaceFile', 'remove', 'removeMany', 'move', 'addFolder', 'renameFolder', 'removeFolder']);
+    const message = hub.onMessage.bind(hub);
+    hub.onMessage = (client, msg) => cloud.run(() => message(client, msg));
+    const ensure = hub.ensureProject.bind(hub);
+    hub.ensureProject = (id) => cloud.run(() => ensure(id));
+    const connection = hub.onConnection.bind(hub);
+    hub.onConnection = (ws, req) => { cloud.bufferSocket(ws); return connection(ws, req); };
+    hub.requestJob = async () => { throw Object.assign(new Error('Cloud audio processing is not enabled. Heavy jobs in the personal browser are disabled.'), { status: 409 }); };
+    cloud.onFailure = () => { for (const client of hub.clients) client.ws.close(1012, 'Reconnect after cloud recovery'); };
   }
 
   const app = express();
@@ -137,6 +162,8 @@ export async function createServer(config = loadConfig()) {
 
   if (privateStudio) app.use(privateStudio.router);
 
+  if (cloud) app.use(['/api', '/mcp'], cloud.middleware());
+
   const api = express.Router();
   // Body limits: small for account endpoints, 1 MB by default. Large project edits and imports get their own
   // 20 MB parser *after* authentication (see api.js), so anonymous requests can't make the server parse big bodies.
@@ -147,8 +174,9 @@ export async function createServer(config = loadConfig()) {
     if (isLargeBodyRoute(req)) return next();
     return defaultJson(req, res, next);
   });
-  api.use(createAuthRouter({ users, sessions, auth, store, samples, hub, onUserCreated, setupCode, isLocal, plugins, singleUser: !!privateStudio, ephemeralStorage: config.ephemeralStorage }));
-  api.use(createApiRouter({ store, samples, users, hub, auth, config, publicUrl, ffmpeg, plugins }));
+  api.use(createAuthRouter({ users, sessions, auth, store, samples, hub, onUserCreated, setupCode, isLocal, plugins, singleUser: !!privateStudio, ephemeralStorage: config.ephemeralStorage, cloudPreferences: !!cloud, cloud }));
+  api.use(createPreferencesRouter({ dataDir: config.dataDir, auth }));
+  api.use(createApiRouter({ store, samples, users, hub, auth, config, publicUrl, ffmpeg, plugins, cloud }));
   apiErrorHandlers(api);
   app.use('/api', api);
 
@@ -157,7 +185,10 @@ export async function createServer(config = loadConfig()) {
     auth,
     legacyToken: config.mcpToken,
     isLocal,
-    backendFor: (user) => createLocalBackend({ store, samples, users, hub, user, publicUrl, ffmpeg, plugins, pluginsAllowed: () => config.pluginsEnabled && users.settings.allowPlugins !== false })
+    backendFor: (user) => {
+      const backend = createLocalBackend({ store, samples, users, hub, user, publicUrl, ffmpeg, plugins, pluginsAllowed: () => config.pluginsEnabled && users.settings.allowPlugins !== false, cloud });
+      return cloud ? cloud.guardBackend(backend) : backend;
+    }
   }));
   sandboxRoutes(app);
 
@@ -177,8 +208,8 @@ export async function createServer(config = loadConfig()) {
   });
 
   const server = http.createServer(app);
-  hub.attach(server, { allowedHosts: config.allowedHosts, originOk, identify: auth.identify });
-  return { app, server, store, samples, users, sessions, hub, auth, config, setupCode, ffmpeg, plugins };
+  hub.attach(server, { allowedHosts: config.allowedHosts, originOk, identify: (req, opts) => cloud?.failed ? null : auth.identify(req, opts) });
+  return { app, server, store, samples, users, sessions, hub, auth, config, setupCode, ffmpeg, plugins, cloud };
 }
 
 async function main() {
@@ -186,6 +217,15 @@ async function main() {
   process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e));
   const ctx = await createServer();
   const { server, config, store, sessions, users, setupCode } = ctx;
+  if (ctx.cloud) {
+    const disconnect = ctx.cloud.onFailure;
+    ctx.cloud.onFailure = () => {
+      disconnect?.();
+      // Render restarts the process; the next boot reads the authoritative
+      // checkpoint, including a commit whose acknowledgement was lost.
+      setTimeout(() => process.exit(1), 500).unref();
+    };
+  }
   const running = await runningServer(config.dataDir);
   if (running) {
     console.error(`Another GreanTeaDawy server (pid ${running.pid}, port ${running.port}) is using ${config.dataDir}. Stop it or use another DATA_DIR.`);
@@ -218,7 +258,8 @@ async function main() {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((e) => {
-    console.error(e);
+    if (process.env.STORAGE_MODE === 'cloud') console.error('[cloud] Startup failed; private configuration omitted. Code:', /^[A-Z0-9_]{1,40}$/.test(e.code || '') ? e.code : 'CLOUD_STARTUP_FAILED');
+    else console.error(e);
     process.exit(1);
   });
 }

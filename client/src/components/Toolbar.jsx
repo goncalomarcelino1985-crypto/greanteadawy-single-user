@@ -81,6 +81,8 @@ export function Toolbar() {
   const canUndo = useStore((s) => s.past.length > 0);
   const canRedo = useStore((s) => s.future.length > 0);
   const midiStatus = useStore((s) => s.midiStatus);
+  const preferencesSync = useStore((s) => s.preferencesSync);
+  const cloudPreferences = useStore((s) => s.auth.cloudPreferences);
   const st = useStore.getState();
 
   const fileMenu = (e) => st.showContextMenu(e, [
@@ -225,6 +227,9 @@ export function Toolbar() {
       </div>
 
       <div className="tb-group status">
+        {cloudPreferences && <button className="tbtn small" title={preferencesSync.error || 'Preferências guardadas na cloud'} onClick={() => st.retryUiPreferences()}>
+          {preferencesSync.phase === 'error' ? 'Preferências sem sincronização' : preferencesSync.unsaved ? 'Preferências por guardar' : preferencesSync.phase === 'loading' ? 'A carregar preferências…' : 'Preferências na cloud'}
+        </button>}
         <button className={`tbtn small ${midiStatus ? 'active' : ''}`} title={midiStatus || 'Connect MIDI keyboard'} onClick={connectMidi}><Icon name="midi" /></button>
         <span className={`claude-indicator ${claudeActive ? 'active' : ''}`} title={claudeActive ? 'Claude is editing…' : 'Claude (MCP) edits show up here live'}>
           <Icon name="claude" size={14} />{claudeActive ? 'Claude is editing…' : ''}

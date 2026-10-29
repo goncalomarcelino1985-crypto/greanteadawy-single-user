@@ -44,7 +44,7 @@ export async function activeProjectId(store, users, user) {
   return list[0]?.id || null;
 }
 
-export function createLocalBackend({ store, samples, users, hub = null, user, publicUrl = null, ffmpeg = defaultFfmpeg(), plugins = null, pluginsAllowed = () => true }) {
+export function createLocalBackend({ store, samples, users, hub = null, user, publicUrl = null, ffmpeg = defaultFfmpeg(), plugins = null, pluginsAllowed = () => true, cloud = null }) {
   if (!user) throw new Error('createLocalBackend needs a user');
   const uidOf = user.id;
   const live = !!hub;
@@ -115,13 +115,17 @@ export function createLocalBackend({ store, samples, users, hub = null, user, pu
     async convertExport(name, { format, bitrate, metadata } = {}) {
       const input = exportFilePath(store.dataDir, uidOf, name);
       if (!/\.wav$/i.test(name)) throw httpError(400, 'Only WAV exports can be converted');
+      if (cloud) await cloud.ensureFile(input);
       try { await fs.access(input); } catch { throw httpError(404, `Export "${name}" not found`); }
-      const out = await ffmpeg.convert({ input, format, bitrate, owner: user.id, metadata: { artist: user.displayName || user.username, ...metadata } });
+      const out = await ffmpeg.convert({ input, format, bitrate, owner: user.id, metadata: { artist: user.displayName || user.username, ...metadata },
+        ...(cloud ? { fileExists: (file) => cloud.fileExists(file) } : {}) });
       hub?.pushActivity(uidOf, { source: 'export', text: `Converted ${name} to ${out.name}` });
       return { name: out.name, bytes: out.bytes, format: out.format, encoder: out.encoder, bitrate: out.bitrate ?? null, bitDepth: out.bitDepth ?? null, url: `${publicUrl || ''}/api/exports/${encodeURIComponent(out.name)}` };
     },
     async deleteExport(name) {
-      await fs.rm(exportFilePath(store.dataDir, uidOf, name), { force: true });
+      const file = exportFilePath(store.dataDir, uidOf, name);
+      await fs.rm(file, { force: true });
+      cloud?.forgetFile(file);
     },
     /** The user's installed plugins ({ allowed, plugins: [...] }); plugins can only be installed from the studio. */
     async listPlugins() {

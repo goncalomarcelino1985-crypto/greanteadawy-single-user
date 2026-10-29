@@ -6,8 +6,10 @@ import { ensureEngine, getEngine, onEngineReady } from '../audio/index.js';
 import { noteSampleRevs } from '../audio/engine.js';
 import { setPluginRegistry, preparePlugins, pluginsUsed } from '../audio/plugins.js';
 import { APP_NAME } from '../lib/version.js';
+import { createPreferencesSync, pickPreferences, RECORDER_DEFAULTS, UI_DEFAULTS } from './preferences.js';
 
 let playSeq = 0; // the latest play()/stop(): a play waiting for plugins only starts if nothing came after it
+let preferenceSessionSeq = 0;
 
 const HISTORY_LIMIT = 150;
 const COALESCE_MS = 900;
@@ -17,7 +19,11 @@ const LS_KEY = 'greanteadawy.ui.v1';
 
 function loadUiPrefs() {
   try {
-    return JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    return { ...saved,
+      recorderPreferences: saved.recorderPreferences || JSON.parse(localStorage.getItem('gtd.recorder') || '{}'),
+      collapsedSampleFolders: saved.collapsedSampleFolders || JSON.parse(localStorage.getItem('gtd.sampleFolders.collapsed') || '[]')
+    };
   } catch {
     return {};
   }
@@ -25,12 +31,31 @@ function loadUiPrefs() {
 
 function saveUiPrefs(state) {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify({
-      windows: state.windows, snap: state.snap, followClaude: state.followClaude, metronome: state.metronome,
-      browserOpen: state.browserOpen, kbOctave: state.kbOctave, recordQuantize: state.recordQuantize
-    }));
+    const key = state.auth.cloudPreferences ? `${LS_KEY}.${state.auth.user.id}` : LS_KEY;
+    localStorage.setItem(key, JSON.stringify(pickPreferences(state)));
   } catch { /* storage unavailable */ }
+  if (state.auth.cloudPreferences) uiPreferences.changed(state);
 }
+
+const uiPreferences = createPreferencesSync({
+  apply(saved) {
+    const windows = mergeWindows(defaultWindows(), saved.windows);
+    for (const key of ['waveEditor', 'recorder']) windows[key] = { ...windows[key], open: false };
+    useStore.setState({ ...UI_DEFAULTS, ...saved, windows,
+      recorderPreferences: { ...RECORDER_DEFAULTS, ...saved.recorderPreferences },
+      collapsedSampleFolders: saved.collapsedSampleFolders || [],
+      zTop: Math.max(10, ...Object.values(windows).map((win) => win.z || 0))
+    });
+  },
+  status(next) {
+    const previous = useStore.getState().preferencesSync;
+    useStore.setState({ preferencesSync: next });
+    if (next.error && next.error !== previous.error) {
+      const action = previous.phase === 'loading' ? 'carregadas da' : 'guardadas na';
+      useStore.getState().toast(`As preferências não foram ${action} cloud: ${next.error}`, 'error', 15000);
+    }
+  }
+});
 
 export function defaultWindows(w = window.innerWidth, h = window.innerHeight) {
   const W = Math.max(600, w - 260);
@@ -121,6 +146,9 @@ export const useStore = create((set, get) => ({
   followClaude: prefs.followClaude ?? true,
   kbOctave: prefs.kbOctave ?? 4,
   recordQuantize: prefs.recordQuantize ?? true,
+  recorderPreferences: { ...RECORDER_DEFAULTS, ...prefs.recorderPreferences },
+  collapsedSampleFolders: Array.isArray(prefs.collapsedSampleFolders) ? prefs.collapsedSampleFolders : [],
+  preferencesSync: { phase: 'local', error: null, conflict: false, unsaved: false },
   toasts: [],
   activity: [],
   contextMenu: null,
@@ -149,8 +177,19 @@ export const useStore = create((set, get) => ({
     }
   },
 
-  startSession(user, status = {}) {
-    set({ auth: { phase: 'ready', user, singleUser: !!status.singleUser, ephemeralStorage: !!status.ephemeralStorage, allowRegistration: !!status.allowRegistration, mcpWithoutToken: !!status.mcpWithoutToken, error: null } });
+  async startSession(user, status = {}) {
+    const ticket = ++preferenceSessionSeq;
+    const cloudPreferences = !!status.cloudPreferences;
+    uiPreferences.stop();
+    set({ auth: { phase: cloudPreferences ? 'loading' : 'ready', user, cloudPreferences, singleUser: !!status.singleUser, cloudAudioRequired: !!status.cloudAudioRequired, ephemeralStorage: !!status.ephemeralStorage, allowRegistration: !!status.allowRegistration, mcpWithoutToken: !!status.mcpWithoutToken, error: null } });
+    if (cloudPreferences) {
+      const windows = defaultWindows();
+      set({ ...UI_DEFAULTS, windows, zTop: 10, recorderPreferences: { ...RECORDER_DEFAULTS }, collapsedSampleFolders: [] });
+      // Load the owner's cloud settings before the UI can publish a layout or any default preferences.
+      await uiPreferences.start(user.id);
+      if (ticket !== preferenceSessionSeq || get().auth.user?.id !== user.id) return;
+      set({ auth: { ...get().auth, phase: 'ready' } });
+    }
     sync.start(useStore);
     get().loadExportFormats();
     get().loadPlugins();
@@ -207,6 +246,8 @@ export const useStore = create((set, get) => ({
 
   /** Clear everything that belongs to the signed-in user. */
   resetSessionState() {
+    preferenceSessionSeq++;
+    uiPreferences.stop();
     getEngine()?.transport.stop();
     // the editor and the recorder held the signed-out session's audio: they start closed, like on a fresh load
     const windows = { ...get().windows };
@@ -214,7 +255,8 @@ export const useStore = create((set, get) => ({
     set({
       project: null, projects: [], samples: [], sampleFolders: [], editSampleId: null, past: [], future: [], activity: [], playing: false, recording: false,
       selectedChannelId: null, selectedPatternId: null, pianoRollChannelId: null, selectedAutomationId: null, loading: true, connected: false,
-      windows, editorDirty: false, editorSaving: false, recorderBusy: false
+      windows, editorDirty: false, editorSaving: false, recorderBusy: false,
+      preferencesSync: { phase: 'local', error: null, conflict: false, unsaved: false }
     });
   },
 
@@ -420,12 +462,17 @@ export const useStore = create((set, get) => ({
     if (s.windows[name].z === s.zTop) return;
     const z = s.zTop + 1;
     set({ windows: { ...s.windows, [name]: { ...s.windows[name], z } }, zTop: z });
+    saveUiPrefs(get());
   },
   moveWindow(name, patch) {
     set((s) => ({ windows: { ...s.windows, [name]: { ...s.windows[name], ...patch } } }));
+    if (Object.hasOwn(patch, 'max')) saveUiPrefs(get());
   },
   persistUi() {
     saveUiPrefs(get());
+  },
+  retryUiPreferences() {
+    return uiPreferences.retry();
   },
   resetLayout() {
     // the wave editor and the recorder hold this session's audio (unsaved edits, a take): they stay open
@@ -661,6 +708,16 @@ onEngineReady((eng) => {
   eng.ctx.addEventListener?.('statechange', () => useStore.setState({ audioReady: eng.ctx.state === 'running' }));
 });
 setUnauthorizedHandler(() => useStore.getState().authLost());
+
+// A debounced/cloud write must finish before the user can safely close the page.
+window.addEventListener('beforeunload', (event) => {
+  if (!useStore.getState().preferencesSync.unsaved) return;
+  event.preventDefault();
+  event.returnValue = '';
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') void uiPreferences.flush();
+});
 
 useStore.subscribe((state, prev) => {
   if (state.project && state.project !== prev.project) {

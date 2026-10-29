@@ -1,8 +1,9 @@
 // File-backed project store. Projects are JSON files in <dataDir>/projects, each owned by one user.
 // All edits go through applyOps(); every change emits an 'ops' event used for live sync.
-// Also keeps named versions (snapshots on disk) and a short undo history of Claude's (MCP) edits.
+// Also keeps named versions, durable retry receipts and a short persisted undo history of MCP edits.
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { applyOps, prepareOps, normalizeProject, createProjectFromTemplate, describeOps, uid } from '@greanteadawy/core';
 import { httpError } from './errors.js';
@@ -11,13 +12,31 @@ import { writeFileAtomic } from './fsutil.js';
 const SAVE_DELAY_MS = 400;
 const MAX_VERSIONS = 50;
 const MAX_UNDO = 30;
+const MAX_RECEIPTS = 512;
+
+function operationId(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string' || !/^[\w:.-]{1,200}$/.test(value)) throw httpError(400, 'Invalid operation id');
+  return value;
+}
+
+function operationHash(ops) {
+  try {
+    // Object key order is not part of an operation's identity; generated IDs are fixed only after this hash.
+    const json = JSON.stringify(ops, (key, value) => value && typeof value === 'object' && !Array.isArray(value)
+      ? Object.fromEntries(Object.keys(value).sort().map((k) => [k, value[k]])) : value);
+    return crypto.createHash('sha256').update(json).digest('hex');
+  } catch {
+    throw httpError(400, 'Operations must be JSON serializable');
+  }
+}
 
 
 export class ProjectStore extends EventEmitter {
   /**
    * @param {string} dataDir
-   * @param {{ saveDelay?: number, cache?: boolean }} opts  cache=false + saveDelay=0 is used by the
-   *   standalone stdio MCP server so it never holds stale copies while the web server may also write.
+   * @param {{ saveDelay?: number, cache?: boolean }} opts  cache=false is used by standalone stdio MCP.
+   *   saveDelay is retained for compatibility; acknowledged edits are always written immediately.
    */
   constructor(dataDir, { saveDelay = SAVE_DELAY_MS, cache = true } = {}) {
     super();
@@ -26,10 +45,13 @@ export class ProjectStore extends EventEmitter {
     this.useCache = cache;
     this.dir = path.join(dataDir, 'projects');
     this.versionsDir = path.join(dataDir, 'versions');
+    this.historyDir = path.join(dataDir, 'history');
     this.cache = new Map();
     this.timers = new Map();
     this.locks = new Map(); // projectId -> promise chain (serializes edits + writes)
     this.undo = new Map(); // projectId -> [{ project, revAfter, description, time }]
+    this.receipts = new Map(); // projectId -> [{ id, hash, rev, time }] for durable retry deduplication
+    this.historyLoaded = new Set();
     // tombstones: deleted ids must never be resurrected by a late read or write (ids are never reused, so this grows
     // by one short string per deleted project)
     this.deleted = new Set();
@@ -38,6 +60,7 @@ export class ProjectStore extends EventEmitter {
   async init() {
     await fs.mkdir(this.dir, { recursive: true });
     await fs.mkdir(this.versionsDir, { recursive: true });
+    await fs.mkdir(this.historyDir, { recursive: true });
     return this;
   }
 
@@ -54,7 +77,10 @@ export class ProjectStore extends EventEmitter {
       try {
         const p = await this.get(f.slice(0, -5));
         if (ownerId === undefined || p.ownerId === ownerId) out.push(meta(p));
-      } catch { /* skip unreadable files */ }
+      } catch (e) {
+        if (e.status === 503) throw e; // a damaged history must never look like an empty workspace
+        // Skip unrelated/unreadable legacy project files.
+      }
     }
     return out.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
   }
@@ -62,7 +88,11 @@ export class ProjectStore extends EventEmitter {
   async get(id) {
     this.file(id); // validates the id before it is used as a cache key
     if (this.deleted.has(id)) throw httpError(404, `Project ${id} not found`);
-    if (this.useCache && this.cache.has(id)) return this.cache.get(id);
+    if (this.useCache && this.cache.has(id)) {
+      const p = this.cache.get(id);
+      await this.loadHistory(id, p);
+      return p;
+    }
     let raw;
     try {
       raw = JSON.parse(await fs.readFile(this.file(id), 'utf8'));
@@ -71,6 +101,7 @@ export class ProjectStore extends EventEmitter {
       throw httpError(404, `Project ${id} not found`);
     }
     const p = { ...normalizeProject(raw), ownerId: raw.ownerId || null };
+    await this.loadHistory(id, p);
     if (this.deleted.has(id)) throw httpError(404, `Project ${id} not found`); // deleted while reading
     this.cache.set(id, p);
     return p;
@@ -102,8 +133,8 @@ export class ProjectStore extends EventEmitter {
     if (name) p.name = String(name).slice(0, 100);
     const now = new Date().toISOString();
     p = { ...p, ownerId, createdAt: now, updatedAt: now };
-    this.cache.set(p.id, p);
-    await this.writeNow(p.id);
+    await this.writeNow(p.id, { project: p, undo: [], receipts: [] });
+    this.publishState(p.id, p, [], []);
     this.emit('list-changed', ownerId);
     return p;
   }
@@ -117,13 +148,28 @@ export class ProjectStore extends EventEmitter {
   remove(id) {
     return this.withLock(id, async () => {
       const p = await this.get(id);
+      // Stage removal with reversible renames; only forget the live state after every part has moved.
+      const trash = await fs.mkdtemp(path.join(this.dataDir, '.removed-'));
+      const moved = [];
+      try {
+        for (const [from, name] of [[this.file(id), 'project.json'], [this.historyFile(id), 'history.json'], [this.versionDir(id), 'versions']]) {
+          const to = path.join(trash, name);
+          try { await fs.rename(from, to); moved.push({ from, to }); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+        }
+      } catch (e) {
+        const rollback = await Promise.allSettled(moved.reverse().map(({ from, to }) => fs.rename(to, from)));
+        if (rollback.some((r) => r.status === 'rejected')) throw new AggregateError([e, ...rollback.filter((r) => r.status === 'rejected').map((r) => r.reason)], 'Project removal failed and rollback was incomplete');
+        await fs.rm(trash, { recursive: true, force: true }).catch(() => {});
+        throw e;
+      }
       this.deleted.add(id);
       this.cache.delete(id);
       clearTimeout(this.timers.get(id));
       this.timers.delete(id);
       this.undo.delete(id);
-      await fs.rm(this.file(id), { force: true });
-      await fs.rm(path.join(this.versionsDir, id), { recursive: true, force: true });
+      this.receipts.delete(id);
+      this.historyLoaded.delete(id);
+      await fs.rm(trash, { recursive: true, force: true }).catch(() => {});
       this.emit('list-changed', p.ownerId);
     });
   }
@@ -136,11 +182,14 @@ export class ProjectStore extends EventEmitter {
       try {
         const p = await this.get(id);
         if (!p.ownerId) {
-          this.cache.set(id, { ...p, ownerId });
-          await this.writeNow(id);
+          const after = { ...p, ownerId };
+          const undo = (this.undo.get(id) || []).map((entry) => ({ ...entry, project: { ...entry.project, ownerId } }));
+          const receipts = this.receipts.get(id) || [];
+          await this.writeNow(id, { project: after, undo, receipts });
+          this.publishState(id, after, undo, receipts);
           n++;
         }
-      } catch { /* ignore */ }
+      } catch (e) { if (e.status === 503) throw e; }
     }
     if (n) this.emit('list-changed', ownerId);
     return n;
@@ -166,10 +215,17 @@ export class ProjectStore extends EventEmitter {
     return this.withLock(id, () => this.applyOpsNow(id, ops, meta));
   }
 
-  async applyOpsNow(id, rawOps, meta) {
+  async applyOpsNow(id, rawOps, meta, { undo: undoOverride } = {}) {
     const loaded = meta.userId ? await this.getOwned(id, meta.userId) : await this.get(id);
     // re-read the cache after the await so concurrent calls never apply ops to a stale copy
     const before = this.useCache ? this.cache.get(id) : loaded;
+    const requestId = operationId(meta.operationId);
+    const hash = requestId ? operationHash(rawOps) : null;
+    const oldReceipt = requestId && (this.receipts.get(id) || []).find((r) => r.id === requestId);
+    if (oldReceipt) {
+      if (oldReceipt.hash !== hash) throw httpError(409, 'Operation id was already used for different operations');
+      return before;
+    }
     let ops;
     let after;
     try {
@@ -181,16 +237,21 @@ export class ProjectStore extends EventEmitter {
     }
     const rev = (before.rev || 0) + 1;
     after = { ...after, ownerId: before.ownerId, rev, updatedAt: new Date().toISOString() };
-    this.cache.set(id, after);
-    if (this.saveDelay > 0) this.scheduleSave(id);
-    else await this.writeNow(id);
     const descriptions = describeOps(ops, after);
+    const stack = [...(undoOverride || this.undo.get(id) || [])];
     if (meta.undoable) {
-      const stack = this.undo.get(id) || [];
       stack.push({ project: before, revAfter: rev, description: descriptions.join('; '), time: Date.now() });
       if (stack.length > MAX_UNDO) stack.shift();
-      this.undo.set(id, stack);
     }
+    const receipts = [...(this.receipts.get(id) || [])];
+    if (requestId) {
+      receipts.push({ id: requestId, hash, rev, time: Date.now() });
+      if (receipts.length > MAX_RECEIPTS) receipts.shift();
+    }
+    // Acknowledged edits are never debounced. Cloud mode commits these two files together before publishing
+    // the result; the local adapter provides atomic individual files and best-effort pair rollback.
+    await this.writeNow(id, { project: after, undo: stack, receipts });
+    this.publishState(id, after, stack, receipts);
     this.emit('ops', {
       projectId: id, ownerId: after.ownerId, ops, rev, source: meta.source || 'api', clientId: meta.clientId || null,
       coalesce: typeof meta.coalesce === 'string' ? meta.coalesce.slice(0, 64) : null, descriptions
@@ -208,15 +269,15 @@ export class ProjectStore extends EventEmitter {
       const p = await this.getOwned(id, ownerId);
       const stack = this.undo.get(id) || [];
       const last = stack[stack.length - 1];
-      if (!last) throw httpError(400, 'Nothing to undo (only changes made through MCP in this server session can be undone)');
+      if (!last) throw httpError(400, 'Nothing to undo (only retained changes made through MCP can be undone)');
       if (last.revAfter !== p.rev && !force) {
         throw httpError(409, 'The project was edited after that change. Pass force=true to revert anyway (later edits are lost), or use restore_version.');
       }
-      stack.pop();
-      const after = await this.applyOpsNow(id, [{ type: 'project/replace', project: last.project }], { source, userId: ownerId });
+      const remaining = stack.slice(0, -1).map((entry) => ({ ...entry }));
       // the state is now what it was right after the previous undoable change, so that one can be undone next
-      const top = stack[stack.length - 1];
-      if (top && top.revAfter === last.project.rev) top.revAfter = after.rev;
+      const top = remaining[remaining.length - 1];
+      if (top && top.revAfter === last.project.rev) top.revAfter = (p.rev || 0) + 1;
+      const after = await this.applyOpsNow(id, [{ type: 'project/replace', project: last.project }], { source, userId: ownerId }, { undo: remaining });
       return { project: after, undone: last.description };
     });
   }
@@ -276,6 +337,57 @@ export class ProjectStore extends EventEmitter {
 
   // ---------------------------------------------------------------- persistence
 
+  historyFile(id) {
+    this.file(id);
+    return path.join(this.historyDir, `${id}.json`);
+  }
+
+  async loadHistory(id, project) {
+    if (this.useCache && this.historyLoaded.has(id)) return;
+    let history;
+    try {
+      history = JSON.parse(await fs.readFile(this.historyFile(id), 'utf8'));
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw httpError(503, 'Saved project history could not be read');
+      // Existing projects created before durable history have no sidecar.
+      this.undo.set(id, []);
+      this.receipts.set(id, []);
+      this.historyLoaded.add(id);
+      return;
+    }
+    const valid = history?.version === 1 && history.projectId === id && history.rev === (project.rev || 0)
+      && Array.isArray(history.undo) && history.undo.length <= MAX_UNDO
+      && Array.isArray(history.receipts) && history.receipts.length <= MAX_RECEIPTS
+      && history.undo.every((r) => r?.project?.id === id && (r.project.ownerId || null) === project.ownerId
+        && Number.isSafeInteger(r.revAfter) && r.revAfter > 0 && r.revAfter <= project.rev
+        && Number.isSafeInteger(r.project.rev) && r.project.rev >= 0 && r.project.rev < r.revAfter
+        && typeof r.description === 'string' && Number.isFinite(r.time))
+      && history.receipts.every((r) => typeof r?.id === 'string' && /^[\w:.-]{1,200}$/.test(r.id)
+        && typeof r.hash === 'string' && /^[a-f0-9]{64}$/.test(r.hash)
+        && Number.isSafeInteger(r.rev) && r.rev > 0 && r.rev <= project.rev && Number.isFinite(r.time))
+      && new Set(history.receipts.map((r) => r.id)).size === history.receipts.length;
+    if (!valid) throw httpError(503, 'Saved project history does not match its revision');
+    this.undo.set(id, history.undo);
+    this.receipts.set(id, history.receipts);
+    this.historyLoaded.add(id);
+  }
+
+  /** A durable retry receipt; callers can acknowledge the original revision after reconnect/restart. */
+  async getOperationReceipt(id, requestId, ownerId, ops) {
+    const key = operationId(requestId);
+    if (ownerId) await this.getOwned(id, ownerId); else await this.get(id);
+    const receipt = (this.receipts.get(id) || []).find((r) => r.id === key) || null;
+    if (receipt && ops !== undefined && receipt.hash !== operationHash(ops)) throw httpError(409, 'Operation id was already used for different operations');
+    return receipt ? { ...receipt } : null;
+  }
+
+  publishState(id, project, undo, receipts) {
+    this.cache.set(id, project);
+    this.undo.set(id, undo);
+    this.receipts.set(id, receipts);
+    this.historyLoaded.add(id);
+  }
+
   scheduleSave(id) {
     clearTimeout(this.timers.get(id));
     this.timers.set(id, setTimeout(() => {
@@ -284,17 +396,28 @@ export class ProjectStore extends EventEmitter {
     }, this.saveDelay));
   }
 
-  async writeNow(id) {
-    const p = this.cache.get(id);
+  async writeNow(id, { project = this.cache.get(id), undo = this.undo.get(id) || [], receipts = this.receipts.get(id) || [] } = {}) {
+    const p = project;
     if (!p || this.deleted.has(id)) return;
-    const tmp = `${this.file(id)}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
-    await fs.writeFile(tmp, JSON.stringify(p));
-    if (this.deleted.has(id)) {
-      await fs.rm(tmp, { force: true });
-      return;
+    const files = [
+      { file: this.file(id), bytes: JSON.stringify(p) },
+      { file: this.historyFile(id), bytes: JSON.stringify({ version: 1, projectId: id, rev: p.rev || 0, undo, receipts }) }
+    ];
+    for (const item of files) {
+      try { item.before = await fs.readFile(item.file); } catch (e) { if (e.code !== 'ENOENT') throw e; item.before = null; }
     }
-    await fs.rename(tmp, this.file(id));
-    if (this.deleted.has(id)) await fs.rm(this.file(id), { force: true }); // deleted during the rename
+    try {
+      for (const item of files) await writeFileAtomic(item.file, item.bytes);
+    } catch (e) {
+      const rollback = await Promise.allSettled(files.map((item) => item.before === null
+        ? fs.rm(item.file, { force: true }) : writeFileAtomic(item.file, item.before)));
+      if (rollback.some((r) => r.status === 'rejected')) {
+        this.cache.delete(id);
+        this.historyLoaded.delete(id);
+        throw new AggregateError([e, ...rollback.filter((r) => r.status === 'rejected').map((r) => r.reason)], 'Project save failed and rollback was incomplete');
+      }
+      throw e;
+    }
   }
 
   async flush() {

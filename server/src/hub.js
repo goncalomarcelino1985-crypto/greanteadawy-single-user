@@ -163,17 +163,13 @@ export class Hub {
       }
       case 'ops': {
         if (!client.projectId || msg.projectId !== client.projectId) throw new Error('Not subscribed to this project');
-        const key = msg.opId ? `${client.userId}:${client.projectId}:${String(msg.opId).slice(0, 100)}` : null;
-        if (key && this.seenOps.has(key)) {
-          send(client.ws, { type: 'ack', opId: msg.opId, rev: this.seenOps.get(key), duplicate: true });
+        const receipt = msg.opId ? await this.store.getOperationReceipt(msg.projectId, msg.opId, client.userId, msg.ops) : null;
+        if (receipt) {
+          send(client.ws, { type: 'ack', opId: msg.opId, rev: receipt.rev, duplicate: true });
           return;
         }
         try {
-          const p = await this.store.applyOps(msg.projectId, msg.ops, { source: 'ui', clientId: client.clientId, userId: client.userId, coalesce: msg.coalesce });
-          if (key) {
-            this.seenOps.set(key, p.rev);
-            if (this.seenOps.size > 20000) this.seenOps.delete(this.seenOps.keys().next().value);
-          }
+          const p = await this.store.applyOps(msg.projectId, msg.ops, { source: 'ui', clientId: client.clientId, userId: client.userId, coalesce: msg.coalesce, operationId: msg.opId });
           send(client.ws, { type: 'ack', opId: msg.opId, rev: p.rev });
         } catch (e) {
           // reject + resync the client with the authoritative state

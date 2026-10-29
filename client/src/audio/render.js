@@ -3,6 +3,7 @@ import { patternLength, songLength, ticksPerBar, PPQ, encodeWav, createLevelMete
 import { AudioEngine } from './engine.js';
 import { LIMITER_HEADROOM } from './effects.js';
 import { preparePlugins } from './plugins.js';
+import { useStore } from '../state/store.js';
 
 const TAP_SIZE = 32768; // AnalyserNode history (max fftSize) — must exceed one chunk
 
@@ -21,6 +22,7 @@ const TAP_SIZE = 32768; // AnalyserNode history (max fftSize) — must exceed on
  * thing feeding that insert, otherwise right after the channel strip (volume/pan) — always before the master bus.
  */
 export async function renderProject(project, opts = {}) {
+  if (useStore.getState().auth.cloudAudioRequired) throw new Error('O processamento de áudio na cloud ainda não está disponível. O render no teu computador está desativado.');
   const { mode = 'song', patternId, loops = 4, tail = 2, sampleRate = 44100, samples = new Map(), bitDepth = 16, ditherSeed = 0, onProgress, encode = true } = opts;
   const songMode = mode === 'song' && songLength(project) > 0;
   let ticks;
