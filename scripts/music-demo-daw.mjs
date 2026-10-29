@@ -18,6 +18,7 @@ const report = { status: 'starting', generatedAt: new Date().toISOString(), exec
   syntheticAudioCreated: false, productionAccessed: false, tempoGridBpm: bpm,
   tempoNote: '126 BPM is the arrangement grid; imported recordings are not time-stretched.', commands: [], inputs: {}, exports: {} };
 let server, browser, page, mcp, temporary;
+const stage = (name) => { report.stage = name; console.log(`Music demo: ${name}`); };
 
 const writeJson = (name, value) => fs.writeFile(path.join(output, name), `${JSON.stringify(value, null, 2)}\n`);
 const musicalState = (project) => {
@@ -45,6 +46,7 @@ function audioFacts(bytes, decodeWav) {
 }
 
 async function main() {
+  stage('validate real input audio');
   assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Audio demo runs only in GitHub Actions, never on the personal computer');
   assert.equal(process.platform, 'linux', 'This demo requires the isolated Linux CI runner');
   await fs.access(path.join(repo, 'client/dist/index.html'));
@@ -66,6 +68,7 @@ async function main() {
   }
 
   temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'gm-real-music-demo-'));
+  stage('start isolated single-user DAW');
   const privateKey = crypto.randomBytes(32).toString('base64url');
   // Deliberately do not merge process.env: the demo cannot inherit cloud credentials.
   server = await createServer({ ...loadConfig({ HOST: '127.0.0.1', PORT: '0', SINGLE_USER: 'true',
@@ -83,6 +86,7 @@ async function main() {
   assert.equal(authorized.status(), 200, 'Temporary single-user browser authorization failed');
   page = await context.newPage();
   const browserErrors = [];
+  report.browserErrors = browserErrors;
   page.on('pageerror', (error) => browserErrors.push(error.message));
   await page.goto(base);
   await page.locator('.toolbar').waitFor();
@@ -93,6 +97,7 @@ async function main() {
   mcp = await connectMcp(base, (await tokenResponse.json()).token);
 
   async function call(name, args = {}, command) {
+    stage(`MCP ${name}`);
     const result = await mcp.client.callTool({ name, arguments: args }, undefined, { timeout: 240_000 });
     const blocks = result.content.filter((entry) => entry.type === 'text').map((entry) => entry.text);
     if (result.isError) throw new Error(`${name}: ${blocks.join('\n')}`);
@@ -106,13 +111,24 @@ async function main() {
     assert.equal(response.status(), 200); return response.json();
   };
   async function waitForProject(id, revision) {
+    stage(`wait for browser project ${id}${revision === undefined ? '' : ` at revision ${revision}`}`);
+    report.expectedBrowser = { projectId: id, revision };
     await page.waitForFunction(({ id, revision }) => {
-      const p = window.greanteadawy?.store.getState().project;
-      return p?.id === id && (revision === undefined || p.rev === revision);
+      const app = window.greanteadawy;
+      const p = app?.store.getState().project;
+      // Incremental ops advance Sync.rev. The project snapshot's rev remains
+      // its last full-load revision until a resync; it is not the live counter.
+      return p?.id === id && app.sync.projectId === id &&
+        (revision === undefined || app.sync.rev === revision);
     }, { id, revision }, { timeout: 20_000 });
+    if (revision !== undefined) {
+      const visible = await page.evaluate(() => window.greanteadawy.store.getState().project);
+      assert.deepEqual(musicalState(visible), musicalState(await getProject(id)), 'Browser musical state differs from the server');
+    }
   }
   const samples = {};
   for (const [name, bytes] of Object.entries(inputs)) {
+    stage(`upload and analyse ${name}.wav`);
     const response = await context.request.post(`${base}/api/samples`, { multipart: {
       file: { name: `${name}.wav`, mimeType: 'audio/wav', buffer: bytes }, name: labels[name]
     }, timeout: 120_000 });
@@ -239,9 +255,19 @@ async function main() {
 try { await main(); }
 catch (error) {
   report.status = 'failed'; report.failure = error.message;
+  report.failureStack = error.stack;
+  if (page) report.browserAtFailure = await page.evaluate(() => {
+    const app = window.greanteadawy;
+    const state = app?.store.getState();
+    return { connected: state?.connected, authPhase: state?.auth?.phase, followClaude: state?.followClaude,
+      projectId: state?.project?.id, projectRevision: state?.project?.rev, syncProjectId: app?.sync.projectId,
+      syncRevision: app?.sync.rev, clipCount: state?.project?.playlist.clips.length };
+  }).catch(() => ({ unavailable: true }));
   await fs.mkdir(output, { recursive: true });
   await writeJson('daw-report.json', report);
-  console.error(`Real music DAW demonstration failed: ${error.message}`);
+  console.error(`Real music DAW demonstration failed at ${report.stage}: ${error.stack}`);
+  console.error(JSON.stringify({ expected: report.expectedBrowser, actual: report.browserAtFailure, browserErrors: report.browserErrors,
+    completedTools: report.commands.map((command) => command.tool) }));
   process.exitCode = 1;
 } finally {
   await mcp?.close().catch(() => {});
