@@ -1,0 +1,485 @@
+{
+  "format": "greanteadawy-project",
+  "version": 1,
+  "id": "prj_qv10axmpqj",
+  "name": "GM AI WORKER — original preservado",
+  "bpm": 126,
+  "timeSig": [
+    4,
+    4
+  ],
+  "swing": 0,
+  "key": "C",
+  "scale": "minor",
+  "channels": [],
+  "patterns": [
+    {
+      "id": "pat_k4eu6qlin1",
+      "name": "Pattern 1",
+      "color": "#8bd65b",
+      "length": 384,
+      "notes": {}
+    }
+  ],
+  "playlist": {
+    "tracks": [
+      {
+        "id": "trk_imkpjukoy9",
+        "name": "Original preservado",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_dz2o822ck2",
+        "name": "Track 2",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_qq2rcrgb0a",
+        "name": "Track 3",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_5l0wyx7uvn",
+        "name": "Track 4",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_9pesxr5ia9",
+        "name": "Track 5",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_jl4k0c0t40",
+        "name": "Track 6",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_mtu9p1evf0",
+        "name": "Track 7",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_22mnknzjui",
+        "name": "Track 8",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_727ueylaeh",
+        "name": "Track 9",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_wzkw2dccck",
+        "name": "Track 10",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_6ya2xcz2xc",
+        "name": "Track 11",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_qv2celqb3r",
+        "name": "Track 12",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_p9cnhytdrh",
+        "name": "Track 13",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_zgp903r08m",
+        "name": "Track 14",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_eobery4kh3",
+        "name": "Track 15",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_npn3fywife",
+        "name": "Track 16",
+        "color": null,
+        "mute": false
+      }
+    ],
+    "clips": [
+      {
+        "id": "clip_j4z1y7g5k9",
+        "kind": "audio",
+        "refId": "smp_b7f2pdnhkm",
+        "track": 0,
+        "start": 0,
+        "length": 6048,
+        "offset": 0,
+        "mute": false,
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "rate": 1
+      }
+    ]
+  },
+  "markers": [],
+  "automations": [],
+  "mixer": [
+    {
+      "id": "mx_v6q4pa86i4",
+      "name": "Master",
+      "color": null,
+      "volume": 1,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [
+        {
+          "id": "fx_7ltpelx572",
+          "type": "limiter",
+          "enabled": true,
+          "params": {
+            "gain": 0,
+            "ceiling": -1,
+            "release": 0.1
+          }
+        }
+      ],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_kbgyww3cso",
+      "name": "Insert 1",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_djtg527dgu",
+      "name": "Insert 2",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_6lr2kk0zds",
+      "name": "Insert 3",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_elym89s9qt",
+      "name": "Insert 4",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_gmt7894hmh",
+      "name": "Insert 5",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_15k0nl30xj",
+      "name": "Insert 6",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_dfkic30ghb",
+      "name": "Insert 7",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_o8jnefv1zb",
+      "name": "Insert 8",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_0udoq2mcvc",
+      "name": "Insert 9",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_6nre0714n8",
+      "name": "Insert 10",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_jb2vs5emw5",
+      "name": "Insert 11",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_ner0fkngcu",
+      "name": "Insert 12",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_9j9spwpawe",
+      "name": "Insert 13",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_abdl4zr38g",
+      "name": "Insert 14",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_oqmar5f7pm",
+      "name": "Insert 15",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_79p4gbc9ow",
+      "name": "Insert 16",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    }
+  ],
+  "spatial": {
+    "enabled": false,
+    "monitor": "stereo"
+  },
+  "createdAt": "2026-10-29T02:45:35.494Z",
+  "updatedAt": "2026-10-29T02:45:35.567Z",
+  "rev": 2
+}

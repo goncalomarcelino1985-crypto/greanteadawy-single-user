@@ -1,0 +1,6 @@
+A Better Way — Rataxes featuring Snowflake
+Source: https://ccmixter.org/files/Rataxes/65367
+Licence: CC-BY-3.0 — https://creativecommons.org/licenses/by/3.0/
+Attribution: A Better Way by Rataxes featuring Snowflake, https://ccmixter.org/files/Rataxes/65367, licensed under Creative Commons Attribution 3.0. Excerpt, source separation and demo arrangement are modifications.
+Changes: 30s excerpt at 60s; converted to PCM; separated with Demucs; common gain applied.
+This licence applies to the source audio and derived stems, independently of the code licence.
