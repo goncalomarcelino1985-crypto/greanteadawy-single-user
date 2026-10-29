@@ -7,6 +7,7 @@ import fs from 'node:fs/promises';
 import { constants } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { createServer } from '../server/src/index.js';
 import { loadConfig } from '../server/src/config.js';
 import { exportsDir } from '../server/src/backend.js';
@@ -73,6 +74,8 @@ function configuration() {
     STORAGE_MODE: 'local', DATA_DIR: dataDir, EPHEMERAL_STORAGE: 'true',
     MAX_UPLOAD_MB: '50', PLUGINS_ENABLED: 'false', FFMPEG_PATH: 'off' });
   assert.ok(!process.env.PUBLIC_URL || process.env.PUBLIC_URL === targetUrl, 'Wrong public service URL');
+  const require = createRequire(import.meta.url);
+  config.musicWorkbench = { enabled: true, ffmpegPath: require('ffmpeg-static') };
   return config;
 }
 

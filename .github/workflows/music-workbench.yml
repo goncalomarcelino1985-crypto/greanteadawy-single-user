@@ -1,0 +1,31 @@
+name: Music workbench checks
+on:
+  push:
+    branches: [demo/cloud-stems]
+permissions:
+  contents: read
+concurrency:
+  group: music-workbench-checks
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx eslint server/src/music server/test/music-*.test.js client/public/music-workbench.js server/src/index.js scripts/music-demo-serve.mjs
+      - name: Check code contracts and real licensed audio fixtures on Linux
+        run: |
+          export GM_AUDIO_TEST_FFMPEG="$(node -p "require('ffmpeg-static')")"
+          node --test --test-timeout=180000 server/test/music-*.test.js server/test/private-studio.test.js
+      - run: npm run build
+      - name: Record the boundary of this validation
+        run: |
+          printf '%s\n' 'Import, timing, alignment and WAV rendering checked using the existing licensed fixture.' 'Provider tests use mock API responses. No new MVSEP separation or Safe From Harm processing is claimed.' 'No audio, credential, cache or artifact is uploaded by this workflow.' >> "$GITHUB_STEP_SUMMARY"

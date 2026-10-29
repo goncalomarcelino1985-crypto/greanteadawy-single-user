@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GM AI WORKER — reconstruir música</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #edf3ef; background: #101713; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1100px; margin: auto; padding: 40px 24px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 30px; }
+    h1 { margin: 8px 0 12px; font-size: clamp(30px, 5vw, 44px); letter-spacing: -.04em; }
+    h2 { font-size: 22px; margin: 0 0 14px; }
+    h3 { font-size: 17px; margin: 0 0 10px; }
+    p { color: #b9c9be; line-height: 1.6; margin: 8px 0 16px; }
+    a { color: #b0ed9d; text-underline-offset: 3px; }
+    .tag { color: #b0ed9d; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; }
+    section { margin-top: 28px; }
+    .card { background: #1b251e; border: 1px solid #344237; border-radius: 12px; padding: 22px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .actions, .facts { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .facts { color: #c5d5c9; font-size: 14px; gap: 8px 18px; line-height: 1.6; margin: 12px 0; }
+    .facts span { white-space: nowrap; }
+    button, .button { display: inline-block; font: inherit; font-weight: 650; background: #b0ed9d; color: #172311; border: 1px solid transparent; padding: 11px 16px; border-radius: 8px; cursor: pointer; text-decoration: none; }
+    .secondary { background: transparent; border-color: #586e5e; color: #d6e8dc; }
+    button:disabled { opacity: .48; cursor: not-allowed; }
+    label { display: grid; gap: 8px; color: #d6e8dc; font-size: 14px; }
+    input, select { font: inherit; max-width: 100%; padding: 10px; background: #101713; border: 1px solid #586e5e; border-radius: 6px; color: #edf3ef; }
+    input[type=file] { width: 100%; }
+    input::file-selector-button { padding: 8px 10px; background: #344237; color: #edf3ef; border: 0; border-radius: 4px; margin-right: 10px; }
+    input[type=number] { width: 100%; }
+    .upload-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px; margin: 18px 0 12px; }
+    .excerpt-fields { margin-top: 14px; max-width: 600px; }
+    details { margin: 14px 0; color: #b9c9be; }
+    summary { cursor: pointer; }
+    .note { font-size: 13px; }
+    .notice { padding-left: 14px; border-left: 3px solid #87ad74; }
+    .error { color: #ffc3af; }
+    .status { min-height: 24px; }
+    audio { display: block; width: 100%; margin: 14px 0; }
+    code { overflow-wrap: anywhere; white-space: normal; font-size: 12px; }
+    [hidden] { display: none !important; }
+    footer { margin-top: 34px; padding-top: 16px; border-top: 1px solid #344237; }
+    :focus-visible { outline: 3px solid #c5f7b4; outline-offset: 4px; }
+    #job-select { width: 100%; }
+    #import-status, #job-status { white-space: pre-line; }
+    @media (max-width: 700px) { main { padding: 26px 16px; } header { display: block; } header a { display: inline-block; margin-top: 8px; } .grid, .upload-row { grid-template-columns: 1fr; } .card { padding: 18px; } }
+  </style>
+  <script src="/music-workbench.js" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <span class="tag">Estúdio pessoal · ambiente de teste</span>
+        <h1>Reconstrói a tua música</h1>
+        <p>Importa o original, separa quatro pistas e edita o arranjo na DAW.</p>
+      </div>
+      <a href="/music-demo.html">Demonstração anterior</a>
+    </header>
+
+    <section class="card" aria-labelledby="import-heading">
+      <h2 id="import-heading">1. Importar WAV ou MP3</h2>
+      <p>O ficheiro original é guardado integralmente. A separação e a exportação são feitas na cloud; o browser serve para ouvir e editar.</p>
+      <form id="import-form">
+        <div class="upload-row">
+          <label for="source-file">Ficheiro WAV ou MP3 · <span id="upload-limit">até 50 MB e 10 minutos</span>
+            <input id="source-file" type="file" accept=".wav,.mp3,audio/wav,audio/x-wav,audio/mpeg" required>
+          </label>
+          <button id="import-button" type="submit">Importar original</button>
+        </div>
+        <details>
+          <summary>Trabalhar apenas um excerto</summary>
+          <p class="note">O corte afeta apenas a cópia de trabalho. Deixa a duração vazia para usar o ficheiro até ao fim.</p>
+          <div class="grid excerpt-fields">
+            <label for="start-seconds">Início, em segundos <input id="start-seconds" type="number" min="0" step="0.001" value="0"></label>
+            <label for="duration-seconds">Duração, em segundos <input id="duration-seconds" type="number" min="1" step="0.001" placeholder="Até ao fim"></label>
+          </div>
+        </details>
+      </form>
+      <p id="import-status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="notice" aria-label="Disponibilidade da separação cloud">
+      <p id="provider-status" class="status" role="status">A verificar a separação gratuita…</p>
+      <p class="note">Ao pedir a separação, a cópia de trabalho é enviada ao MVSEP, sem publicação na galeria. O serviço usa links de resultado com acesso por URL, não uma área autenticada. Aqui os resultados são servidos pelo teu estúdio privado. <a href="https://mvsep.com/en/plans" rel="noreferrer" target="_blank">Plano gratuito</a> · <a href="https://mvsep.com/en/privacy-policy" rel="noreferrer" target="_blank">Privacidade do MVSEP</a>.</p>
+      <details id="provider-setup">
+        <summary>Ligar uma conta MVSEP gratuita</summary>
+        <p class="note">Entra ou cria a tua conta no <a href="https://mvsep.com/login" rel="noreferrer" target="_blank">MVSEP</a> e obtém a chave na <a href="https://mvsep.com/en/full_api" rel="noreferrer" target="_blank">página da API</a>. Não compres créditos nem atives Premium. Cola a chave apenas neste campo; não a envies no chat.</p>
+        <form id="provider-form" class="upload-row">
+          <label for="provider-token">Chave de acesso do MVSEP
+            <input id="provider-token" type="password" autocomplete="off" spellcheck="false" maxlength="512" required>
+          </label>
+          <button id="provider-button" type="submit">Verificar conta gratuita</button>
+        </form>
+        <p class="note">A chave é enviada ao servidor deste teste e ao MVSEP para verificar a conta. Fica apenas na memória do servidor, até reiniciar; não é guardada no browser. Esta verificação não inicia uma separação.</p>
+        <p id="provider-form-status" class="status" role="status" aria-live="polite"></p>
+      </details>
+    </section>
+
+    <section id="history" hidden>
+      <label for="job-select">Trabalhos neste ambiente de teste <select id="job-select"></select></label>
+    </section>
+
+    <div id="workspace" hidden>
+      <section class="card" aria-labelledby="job-heading">
+        <h2 id="job-heading">Original</h2>
+        <p id="job-status" class="status" role="status" aria-live="polite"></p>
+        <div id="original-facts" class="facts"></div>
+        <a id="download-original" hidden download>Descarregar o ficheiro original intacto</a>
+        <details><summary>Identidade do original</summary><p class="note">SHA-256: <code id="original-hash"></code></p></details>
+        <div class="actions">
+          <button id="separate-button" type="button" disabled>Separar em quatro stems</button>
+          <button id="refresh-button" type="button" class="secondary">Atualizar estado</button>
+        </div>
+        <p id="action-status" class="status error" role="status" aria-live="polite"></p>
+      </section>
+
+      <section aria-labelledby="stems-heading">
+        <h2 id="stems-heading">2. Ouvir e editar as pistas</h2>
+        <div id="timing-facts" class="facts"></div>
+        <p id="timing-note" class="note"></p>
+        <p id="stems-empty">Os quatro leitores aparecem quando a separação real terminar e o alinhamento for verificado.</p>
+        <div id="stems" class="grid"></div>
+        <div class="actions" style="margin-top:18px">
+          <button id="open-daw-button" type="button" disabled>Abrir estas pistas na DAW</button>
+        </div>
+        <p class="note">Na DAW, corta, move e repete partes de cada pista; usa Undo para desfazer. Estes stems são áudio editável: “Outros instrumentos” continua a ser uma mistura, não notas MIDI ou instrumentos separados.</p>
+      </section>
+
+      <section aria-labelledby="compare-heading">
+        <h2 id="compare-heading">3. Comparar e exportar</h2>
+        <p>Depois de editar, atualiza o WAV para ouvir a versão atual. Os botões A/B mantêm a mesma posição e nunca sobrepõem os dois áudios.</p>
+        <div class="actions">
+          <button id="render-button" type="button" disabled>Atualizar versão editada em WAV</button>
+          <button id="listen-a" type="button" class="secondary" disabled>Ouvir A · original</button>
+          <button id="listen-b" type="button" class="secondary" disabled>Ouvir B · editada</button>
+        </div>
+        <p id="render-status" class="status" role="status" aria-live="polite"></p>
+        <div class="grid">
+          <article class="card">
+            <h3>A · Original / excerto</h3>
+            <audio id="audio-a" controls preload="metadata" aria-label="Ouvir o original ou excerto"></audio>
+            <a id="download-clip" hidden download="original-excerto.wav">Descarregar excerto WAV</a>
+          </article>
+          <article class="card">
+            <h3>B · Versão editada</h3>
+            <p id="edited-empty" class="note">Ainda não existe uma exportação deste arranjo. Pede a atualização depois de editar.</p>
+            <audio id="audio-b" controls preload="metadata" aria-label="Ouvir a versão editada" hidden></audio>
+            <a id="download-edited" hidden download="arranjo-editado.wav">Descarregar resultado WAV</a>
+            <p id="edited-revision" class="note"></p>
+          </article>
+        </div>
+        <p class="note">A exportação cloud desta fase reproduz cortes, repetições, posição, silêncio, ganho e fades dos clips áudio. Instrumentos MIDI e efeitos adicionais precisam de um motor de exportação compatível; se estiverem presentes, a exportação é recusada com uma explicação.</p>
+      </section>
+    </div>
+
+    <footer>
+      <p class="note">Ambiente de teste temporário. Descarrega o original, os quatro stems e os resultados antes de terminar. Este ecrã não ativa produção, backups, subscrições nem processamento de IA no teu computador.</p>
+    </footer>
+  </main>
+</body>
+</html>

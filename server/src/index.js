@@ -176,6 +176,11 @@ export async function createServer(config = loadConfig()) {
   });
   api.use(createAuthRouter({ users, sessions, auth, store, samples, hub, onUserCreated, setupCode, isLocal, plugins, singleUser: !!privateStudio, ephemeralStorage: config.ephemeralStorage, cloudPreferences: !!cloud, cloud }));
   api.use(createPreferencesRouter({ dataDir: config.dataDir, auth }));
+  if (config.musicWorkbench?.enabled === true) {
+    if (cloud || !privateStudio) throw new Error('Music workbench is restricted to the private temporary test service');
+    const { createMusicRouter } = await import('./music/router.js');
+    api.use('/music', await createMusicRouter({ config, auth, samples, store, users }));
+  }
   api.use(createApiRouter({ store, samples, users, hub, auth, config, publicUrl, ffmpeg, plugins, cloud }));
   apiErrorHandlers(api);
   app.use('/api', api);
