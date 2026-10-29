@@ -29,7 +29,6 @@ jobs:
       CUDA_VISIBLE_DEVICES: ''
       PIP_NO_CACHE_DIR: '1'
       PIP_DISABLE_PIP_VERSION_CHECK: '1'
-      TORCH_HOME: ${{ runner.temp }}/gm-demo-models
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,7 +53,7 @@ jobs:
           python -m pip install 'numpy==1.26.4' 'demucs==4.0.1'
           python -m pip check
       - name: Separate at most 30 seconds into four actual WAV stems
-        run: python scripts/music-demo-separate.py
+        run: TORCH_HOME="$RUNNER_TEMP/gm-demo-models" python scripts/music-demo-separate.py
       - name: Build the existing DAW and its remote browser
         run: |
           npm ci
