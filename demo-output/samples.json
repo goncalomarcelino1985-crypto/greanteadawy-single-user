@@ -1,0 +1,552 @@
+[
+  {
+    "id": "smp_vze6ju9w77",
+    "name": "Original preservado",
+    "folderId": null,
+    "rev": 1,
+    "file": "mixture.wav",
+    "mime": "audio/wav",
+    "size": 5292044,
+    "duration": 30,
+    "metadata": {
+      "container": "WAVE",
+      "codec": "PCM",
+      "codecProfile": null,
+      "lossless": true,
+      "sampleRate": 44100,
+      "bitsPerSample": 16,
+      "channels": 2,
+      "bitrateKbps": 1411,
+      "duration": 30,
+      "tags": {}
+    },
+    "analysis": {
+      "duration": 30,
+      "sampleRate": 44100,
+      "channels": 2,
+      "peakDb": -0.2,
+      "truePeakDb": -0.2,
+      "rmsDb": -19.2,
+      "lufs": -17.6,
+      "shortTermMaxLufs": -14.6,
+      "loudnessRangeLu": 7.1,
+      "momentaryMaxLufs": -13.3,
+      "crestDb": 19,
+      "dcOffset": 0.004,
+      "invalidSamples": 0,
+      "clipping": {
+        "samples": 0,
+        "percent": 0
+      },
+      "silence": {
+        "headMs": 0,
+        "tailMs": 0
+      },
+      "stereo": {
+        "correlation": 0.6,
+        "width": 0.5,
+        "lowWidth": 0.22,
+        "balanceDb": 0
+      },
+      "spectrum": {
+        "centroidHz": 383,
+        "lowPeakHz": 47.8,
+        "lowPeakNote": "G1 -45c",
+        "brightness": "dark",
+        "flatness": 0.03,
+        "tonality": "tonal",
+        "bandsPercent": {
+          "sub": 37.2,
+          "low": 40.1,
+          "lowMid": 8.4,
+          "mid": 9.2,
+          "highMid": 4.2,
+          "high": 0.8
+        }
+      },
+      "onsets": {
+        "count": 57,
+        "perSecond": 1.9,
+        "firstTimes": [
+          0.372,
+          0.627,
+          1.637,
+          2.403,
+          2.659,
+          2.914,
+          3.042,
+          3.68,
+          4.69,
+          5.201,
+          5.7,
+          6.467,
+          6.722,
+          6.978,
+          7.105,
+          7.488
+        ]
+      },
+      "tempo": {
+        "bpm": 117.6,
+        "confidence": 1
+      },
+      "pitch": null,
+      "key": {
+        "key": "C",
+        "scale": "major",
+        "confidence": 0.8,
+        "runnerUp": "G major"
+      },
+      "kind": "loop",
+      "character": "bass loop",
+      "loop": {
+        "beats": 58.8,
+        "bars": 14.7,
+        "fitsWholeBars": false
+      },
+      "summary": "30s stereo loop, likely bass loop. Loudness -17.6 LUFS, peak -0.2 dBFS, crest 19 dB. Spectrum dark (centroid 383 Hz, tonal); energy sub 37.2% / low 40.1% / low-mid 8.4% / mid 9.2% / high-mid 4.2% / high 0.8%. Tempo ≈ 117.6 BPM (14.7 bars). Key ≈ C major."
+    },
+    "createdAt": "2026-10-29T02:47:47.572Z",
+    "sourceStem": "mixture"
+  },
+  {
+    "id": "smp_chdn4xl8zj",
+    "name": "Voz",
+    "folderId": null,
+    "rev": 1,
+    "file": "vocals.wav",
+    "mime": "audio/wav",
+    "size": 5292044,
+    "duration": 30,
+    "metadata": {
+      "container": "WAVE",
+      "codec": "PCM",
+      "codecProfile": null,
+      "lossless": true,
+      "sampleRate": 44100,
+      "bitsPerSample": 16,
+      "channels": 2,
+      "bitrateKbps": 1411,
+      "duration": 30,
+      "tags": {}
+    },
+    "analysis": {
+      "duration": 30,
+      "sampleRate": 44100,
+      "channels": 2,
+      "peakDb": -11.2,
+      "truePeakDb": -11.1,
+      "rmsDb": -34.4,
+      "lufs": -22.6,
+      "shortTermMaxLufs": -22.6,
+      "loudnessRangeLu": 6.5,
+      "momentaryMaxLufs": -18.2,
+      "crestDb": 23.2,
+      "dcOffset": 0.004,
+      "invalidSamples": 0,
+      "clipping": {
+        "samples": 0,
+        "percent": 0
+      },
+      "silence": {
+        "headMs": 0,
+        "tailMs": 0
+      },
+      "stereo": {
+        "correlation": 0.72,
+        "width": 0.4,
+        "lowWidth": 0.15,
+        "balanceDb": 0
+      },
+      "spectrum": {
+        "centroidHz": 1807,
+        "lowPeakHz": 255.9,
+        "lowPeakNote": "C4 -40c",
+        "brightness": "warm",
+        "flatness": 0.12,
+        "tonality": "mixed",
+        "bandsPercent": {
+          "sub": 0,
+          "low": 4.1,
+          "lowMid": 13.7,
+          "mid": 34.8,
+          "highMid": 46.6,
+          "high": 0.7
+        }
+      },
+      "onsets": {
+        "count": 69,
+        "perSecond": 2.3,
+        "firstTimes": [
+          0.372,
+          0.627,
+          1.138,
+          1.649,
+          2.403,
+          2.67,
+          3.68,
+          4.702,
+          5.201,
+          5.712,
+          6.734,
+          6.966,
+          7.488,
+          7.755,
+          7.825,
+          8.731
+        ]
+      },
+      "tempo": {
+        "bpm": 117.5,
+        "confidence": 0.36
+      },
+      "pitch": null,
+      "key": {
+        "key": "C",
+        "scale": "major",
+        "confidence": 0.51,
+        "runnerUp": "G major"
+      },
+      "kind": "loop",
+      "character": "drum loop",
+      "loop": {
+        "beats": 58.75,
+        "bars": 14.69,
+        "fitsWholeBars": false
+      },
+      "summary": "30s stereo loop, likely drum loop. Loudness -22.6 LUFS, peak -11.2 dBFS, crest 23.2 dB. Spectrum warm (centroid 1807 Hz, mixed); energy sub 0% / low 4.1% / low-mid 13.7% / mid 34.8% / high-mid 46.6% / high 0.7%. Tempo ≈ 117.5 BPM (14.69 bars). Key ≈ C major."
+    },
+    "createdAt": "2026-10-29T02:47:48.221Z",
+    "sourceStem": "vocals"
+  },
+  {
+    "id": "smp_7bt9oc97j9",
+    "name": "Bateria",
+    "folderId": null,
+    "rev": 1,
+    "file": "drums.wav",
+    "mime": "audio/wav",
+    "size": 5292044,
+    "duration": 30,
+    "metadata": {
+      "container": "WAVE",
+      "codec": "PCM",
+      "codecProfile": null,
+      "lossless": true,
+      "sampleRate": 44100,
+      "bitsPerSample": 16,
+      "channels": 2,
+      "bitrateKbps": 1411,
+      "duration": 30,
+      "tags": {}
+    },
+    "analysis": {
+      "duration": 30,
+      "sampleRate": 44100,
+      "channels": 2,
+      "peakDb": -1.1,
+      "truePeakDb": -1,
+      "rmsDb": -22.8,
+      "lufs": -19.8,
+      "shortTermMaxLufs": -16.9,
+      "loudnessRangeLu": 10.6,
+      "momentaryMaxLufs": -15,
+      "crestDb": 21.8,
+      "dcOffset": 0.003,
+      "invalidSamples": 0,
+      "clipping": {
+        "samples": 0,
+        "percent": 0
+      },
+      "silence": {
+        "headMs": 0,
+        "tailMs": 0
+      },
+      "stereo": {
+        "correlation": 0.94,
+        "width": 0.18,
+        "lowWidth": 0.04,
+        "balanceDb": 0
+      },
+      "spectrum": {
+        "centroidHz": 361,
+        "lowPeakHz": 54.9,
+        "lowPeakNote": "A1",
+        "brightness": "dark",
+        "flatness": 0.14,
+        "tonality": "mixed",
+        "bandsPercent": {
+          "sub": 42.6,
+          "low": 48.4,
+          "lowMid": 0.9,
+          "mid": 3,
+          "highMid": 3.6,
+          "high": 1.5
+        }
+      },
+      "onsets": {
+        "count": 49,
+        "perSecond": 1.63,
+        "firstTimes": [
+          0.372,
+          0.627,
+          1.649,
+          2.403,
+          2.659,
+          2.914,
+          3.68,
+          4.69,
+          5.7,
+          6.467,
+          6.722,
+          7.488,
+          7.744,
+          8.754,
+          9.265,
+          9.776
+        ]
+      },
+      "tempo": {
+        "bpm": 117.6,
+        "confidence": 1
+      },
+      "pitch": null,
+      "key": {
+        "key": "C",
+        "scale": "major",
+        "confidence": 0.7,
+        "runnerUp": "G major"
+      },
+      "kind": "loop",
+      "character": "bass loop",
+      "loop": {
+        "beats": 58.8,
+        "bars": 14.7,
+        "fitsWholeBars": false
+      },
+      "summary": "30s stereo loop, likely bass loop. Loudness -19.8 LUFS, peak -1.1 dBFS, crest 21.8 dB. Spectrum dark (centroid 361 Hz, mixed); energy sub 42.6% / low 48.4% / low-mid 0.9% / mid 3% / high-mid 3.6% / high 1.5%. Tempo ≈ 117.6 BPM (14.7 bars). Key ≈ C major."
+    },
+    "createdAt": "2026-10-29T02:47:48.822Z",
+    "sourceStem": "drums"
+  },
+  {
+    "id": "smp_tlioa6rrew",
+    "name": "Baixo",
+    "folderId": null,
+    "rev": 1,
+    "file": "bass.wav",
+    "mime": "audio/wav",
+    "size": 5292044,
+    "duration": 30,
+    "metadata": {
+      "container": "WAVE",
+      "codec": "PCM",
+      "codecProfile": null,
+      "lossless": true,
+      "sampleRate": 44100,
+      "bitsPerSample": 16,
+      "channels": 2,
+      "bitrateKbps": 1411,
+      "duration": 30,
+      "tags": {}
+    },
+    "analysis": {
+      "duration": 30,
+      "sampleRate": 44100,
+      "channels": 2,
+      "peakDb": -5.2,
+      "truePeakDb": -5.2,
+      "rmsDb": -26.6,
+      "lufs": -22.9,
+      "shortTermMaxLufs": -22.1,
+      "loudnessRangeLu": 16.7,
+      "momentaryMaxLufs": -20.2,
+      "crestDb": 21.4,
+      "dcOffset": 0.006,
+      "invalidSamples": 0,
+      "clipping": {
+        "samples": 0,
+        "percent": 0
+      },
+      "silence": {
+        "headMs": 0,
+        "tailMs": 0
+      },
+      "stereo": {
+        "correlation": 0.98,
+        "width": 0.11,
+        "lowWidth": 0.12,
+        "balanceDb": -0.6
+      },
+      "spectrum": {
+        "centroidHz": 72,
+        "lowPeakHz": 41.9,
+        "lowPeakNote": "E1 +30c",
+        "brightness": "dark",
+        "flatness": 0.09,
+        "tonality": "tonal",
+        "bandsPercent": {
+          "sub": 73.1,
+          "low": 24.8,
+          "lowMid": 2,
+          "mid": 0.1,
+          "highMid": 0,
+          "high": 0
+        }
+      },
+      "onsets": {
+        "count": 89,
+        "perSecond": 2.97,
+        "firstTimes": [
+          0.372,
+          0.627,
+          1.138,
+          1.649,
+          2.659,
+          3.68,
+          4.702,
+          5.201,
+          5.712,
+          6.734,
+          7.488,
+          7.744,
+          8.766,
+          9.265,
+          9.776,
+          10.542
+        ]
+      },
+      "tempo": {
+        "bpm": 117.7,
+        "confidence": 0.84
+      },
+      "pitch": null,
+      "key": {
+        "key": "F",
+        "scale": "major",
+        "confidence": 0.86,
+        "runnerUp": "C major"
+      },
+      "kind": "loop",
+      "character": "bass loop",
+      "loop": {
+        "beats": 58.85,
+        "bars": 14.71,
+        "fitsWholeBars": false
+      },
+      "summary": "30s stereo loop, likely bass loop. Loudness -22.9 LUFS, peak -5.2 dBFS, crest 21.4 dB. Spectrum dark (centroid 72 Hz, tonal); energy sub 73.1% / low 24.8% / low-mid 2% / mid 0.1% / high-mid 0% / high 0%. Tempo ≈ 117.7 BPM (14.71 bars). Key ≈ F major."
+    },
+    "createdAt": "2026-10-29T02:47:49.454Z",
+    "sourceStem": "bass"
+  },
+  {
+    "id": "smp_94uffu330z",
+    "name": "Outros instrumentos",
+    "folderId": null,
+    "rev": 1,
+    "file": "other.wav",
+    "mime": "audio/wav",
+    "size": 5292044,
+    "duration": 30,
+    "metadata": {
+      "container": "WAVE",
+      "codec": "PCM",
+      "codecProfile": null,
+      "lossless": true,
+      "sampleRate": 44100,
+      "bitsPerSample": 16,
+      "channels": 2,
+      "bitrateKbps": 1411,
+      "duration": 30,
+      "tags": {}
+    },
+    "analysis": {
+      "duration": 30,
+      "sampleRate": 44100,
+      "channels": 2,
+      "peakDb": -2.9,
+      "truePeakDb": -2.9,
+      "rmsDb": -24.1,
+      "lufs": -20.7,
+      "shortTermMaxLufs": -18.7,
+      "loudnessRangeLu": 7.5,
+      "momentaryMaxLufs": -16.3,
+      "crestDb": 21.2,
+      "dcOffset": 0.003,
+      "invalidSamples": 0,
+      "clipping": {
+        "samples": 0,
+        "percent": 0
+      },
+      "silence": {
+        "headMs": 0,
+        "tailMs": 0
+      },
+      "stereo": {
+        "correlation": -0.07,
+        "width": 1.07,
+        "lowWidth": 0.7,
+        "balanceDb": 0.4
+      },
+      "spectrum": {
+        "centroidHz": 479,
+        "lowPeakHz": 77.8,
+        "lowPeakNote": "D#2",
+        "brightness": "dark",
+        "flatness": 0.01,
+        "tonality": "tonal",
+        "bandsPercent": {
+          "sub": 0.2,
+          "low": 33.9,
+          "lowMid": 33.8,
+          "mid": 29.4,
+          "highMid": 2.5,
+          "high": 0.1
+        }
+      },
+      "onsets": {
+        "count": 86,
+        "perSecond": 2.87,
+        "firstTimes": [
+          0.372,
+          0.627,
+          1.138,
+          1.649,
+          1.892,
+          2.403,
+          2.659,
+          2.786,
+          3.042,
+          3.553,
+          3.68,
+          4.702,
+          5.201,
+          5.712,
+          5.968,
+          6.467
+        ]
+      },
+      "tempo": {
+        "bpm": 117.6,
+        "confidence": 1
+      },
+      "pitch": null,
+      "key": {
+        "key": "C",
+        "scale": "major",
+        "confidence": 0.83,
+        "runnerUp": "G major"
+      },
+      "kind": "loop",
+      "character": "melodic loop",
+      "loop": {
+        "beats": 58.8,
+        "bars": 14.7,
+        "fitsWholeBars": false
+      },
+      "summary": "30s stereo loop, likely melodic loop. Loudness -20.7 LUFS, peak -2.9 dBFS, crest 21.2 dB. Spectrum dark (centroid 479 Hz, tonal); energy sub 0.2% / low 33.9% / low-mid 33.8% / mid 29.4% / high-mid 2.5% / high 0.1%. Tempo ≈ 117.6 BPM (14.7 bars). Key ≈ C major."
+    },
+    "createdAt": "2026-10-29T02:47:50.024Z",
+    "sourceStem": "other"
+  }
+]

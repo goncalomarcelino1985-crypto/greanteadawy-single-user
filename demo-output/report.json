@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "url": "https://ccmixter.org/content/Rataxes/Rataxes_-_A_Better_Way.mp3",
+    "sha256": "66e0b1dcbd0825dc70674e7b53faa1c1195fc78a0d2afdd767734d9c3c10f936",
+    "bytes": 15332704,
+    "format": "mp3",
+    "title": "A Better Way",
+    "artist": "Rataxes featuring Snowflake",
+    "pageUrl": "https://ccmixter.org/files/Rataxes/65367",
+    "declaredBpm": 118
+  },
+  "license": {
+    "id": "CC-BY-3.0",
+    "url": "https://creativecommons.org/licenses/by/3.0/",
+    "attribution": "A Better Way by Rataxes featuring Snowflake, https://ccmixter.org/files/Rataxes/65367, licensed under Creative Commons Attribution 3.0. Excerpt, source separation and demo arrangement are modifications."
+  },
+  "clip": {
+    "startSeconds": 60,
+    "durationSeconds": 30
+  },
+  "model": "htdemucs",
+  "device": "cpu",
+  "threads": 4,
+  "versions": {
+    "demucs": "4.0.1",
+    "torch": "2.2.2+cpu",
+    "torchaudio": "2.2.2+cpu",
+    "numpy": "1.26.4"
+  },
+  "sourceCommit": "4ca49015b17790bb258a4a7b2f4bc2c3703d0a4c",
+  "elapsedSeconds": 29.097,
+  "outputCommonGain": 0.9943840961169257,
+  "decodedInputSha256": "ffb51875689fcaa7229cf222924b345c45576f034e911746be36e8dda7f0226c",
+  "reconstructionResidualRms": 0.012241354212164879,
+  "audio": {
+    "mixture.wav": {
+      "bytes": 5292044,
+      "sha256": "28ab4aeb64c14582348a9a3248340b343dd0f861c1328441ecabab36ce1ca141",
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitDepth": 16,
+      "frames": 1323000,
+      "durationSeconds": 30.0,
+      "peak": 0.97998046875,
+      "rms": 0.1096128504761143,
+      "rmsDbfs": -19.20277056599006,
+      "nonZeroSamples": 2645323,
+      "clippedSamples": 0
+    },
+    "vocals.wav": {
+      "bytes": 5292044,
+      "sha256": "919d8eb24fb1ee55081048198ecd88abc8971fdb84d411af7dcfd246a99c6b53",
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitDepth": 16,
+      "frames": 1323000,
+      "durationSeconds": 30.0,
+      "peak": 0.276153564453125,
+      "rms": 0.019098112712421157,
+      "rmsDbfs": -34.38019095774548,
+      "nonZeroSamples": 2645547,
+      "clippedSamples": 0
+    },
+    "drums.wav": {
+      "bytes": 5292044,
+      "sha256": "c63f0eb932a128077451dd74c8ca93f43d69d54aab94fdb7130c9da4c4f97064",
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitDepth": 16,
+      "frames": 1323000,
+      "durationSeconds": 30.0,
+      "peak": 0.884857177734375,
+      "rms": 0.07221415945236018,
+      "rmsDbfs": -22.827552788464356,
+      "nonZeroSamples": 2643971,
+      "clippedSamples": 0
+    },
+    "bass.wav": {
+      "bytes": 5292044,
+      "sha256": "5413c178e7425fed218f746e5b350fde43b6dfcfc6b75d3fc3a5c88f79f2b681",
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitDepth": 16,
+      "frames": 1323000,
+      "durationSeconds": 30.0,
+      "peak": 0.5474853515625,
+      "rms": 0.04681397401654681,
+      "rmsDbfs": -26.59248980500935,
+      "nonZeroSamples": 2645340,
+      "clippedSamples": 0
+    },
+    "other.wav": {
+      "bytes": 5292044,
+      "sha256": "bd5237c784730af1e35c4a1cc7996d2257aaf26f0b253712d938e0217920aad8",
+      "sampleRate": 44100,
+      "channels": 2,
+      "bitDepth": 16,
+      "frames": 1323000,
+      "durationSeconds": 30.0,
+      "peak": 0.71875,
+      "rms": 0.06225168054699114,
+      "rmsDbfs": -24.116978397115787,
+      "nonZeroSamples": 2644795,
+      "clippedSamples": 0
+    }
+  },
+  "listeningQualityValidated": false,
+  "note": "Real model separation; waveform checks do not establish musical quality."
+}

@@ -1,0 +1,527 @@
+{
+  "format": "greanteadawy-project",
+  "version": 1,
+  "id": "prj_ofs5p9u22d",
+  "name": "GM AI WORKER — demonstração real",
+  "bpm": 126,
+  "timeSig": [
+    4,
+    4
+  ],
+  "swing": 0,
+  "key": "C",
+  "scale": "minor",
+  "channels": [],
+  "patterns": [
+    {
+      "id": "pat_jmuscczylt",
+      "name": "Pattern 1",
+      "color": "#3fb5d6",
+      "length": 384,
+      "notes": {}
+    }
+  ],
+  "playlist": {
+    "tracks": [
+      {
+        "id": "trk_8tdj2oeuzw",
+        "name": "Voz",
+        "color": "#61c2ff",
+        "mute": false
+      },
+      {
+        "id": "trk_0hxaya8ff3",
+        "name": "Bateria",
+        "color": "#ff9e63",
+        "mute": false
+      },
+      {
+        "id": "trk_eo0xen938f",
+        "name": "Baixo",
+        "color": "#91d676",
+        "mute": false
+      },
+      {
+        "id": "trk_qhh4yfnuhc",
+        "name": "Outros instrumentos",
+        "color": "#cc9bff",
+        "mute": false
+      },
+      {
+        "id": "trk_e6m4i21n39",
+        "name": "Track 5",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_4d5vt7534x",
+        "name": "Track 6",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_o0cdoitbwn",
+        "name": "Track 7",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_tla01eo9f8",
+        "name": "Track 8",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_d7v6c35283",
+        "name": "Track 9",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_gezhoeio7q",
+        "name": "Track 10",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_dkgvin24yf",
+        "name": "Track 11",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_wi4qjnprvb",
+        "name": "Track 12",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_7sscywv657",
+        "name": "Track 13",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_h49s20zrdp",
+        "name": "Track 14",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_fijy16uigz",
+        "name": "Track 15",
+        "color": null,
+        "mute": false
+      },
+      {
+        "id": "trk_cqv5mt1zif",
+        "name": "Track 16",
+        "color": null,
+        "mute": false
+      }
+    ],
+    "clips": [
+      {
+        "id": "clip_d83msk8foh",
+        "kind": "audio",
+        "refId": "smp_chdn4xl8zj",
+        "track": 0,
+        "start": 0,
+        "length": 6048,
+        "offset": 0,
+        "mute": false,
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "rate": 1
+      },
+      {
+        "id": "clip_706s3qdc62",
+        "kind": "audio",
+        "refId": "smp_7bt9oc97j9",
+        "track": 1,
+        "start": 1536,
+        "length": 4512,
+        "offset": 1536,
+        "mute": false,
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "rate": 1
+      },
+      {
+        "id": "clip_0ri7x6bp5w",
+        "kind": "audio",
+        "refId": "smp_tlioa6rrew",
+        "track": 2,
+        "start": 0,
+        "length": 6048,
+        "offset": 0,
+        "mute": false,
+        "gain": 0.7079457843841379,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "rate": 1
+      },
+      {
+        "id": "clip_mi0yns2vd1",
+        "kind": "audio",
+        "refId": "smp_94uffu330z",
+        "track": 3,
+        "start": 0,
+        "length": 6048,
+        "offset": 0,
+        "mute": false,
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "rate": 1
+      }
+    ]
+  },
+  "markers": [],
+  "automations": [],
+  "mixer": [
+    {
+      "id": "mx_s64yq872x5",
+      "name": "Master",
+      "color": null,
+      "volume": 1,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [
+        {
+          "id": "fx_aayrodedj7",
+          "type": "limiter",
+          "enabled": true,
+          "params": {
+            "gain": 0,
+            "ceiling": -1,
+            "release": 0.1
+          }
+        }
+      ],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_4v8bpvvxju",
+      "name": "Insert 1",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_kpukzg8imt",
+      "name": "Insert 2",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_k2f4dn5f3j",
+      "name": "Insert 3",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_qcvu9dl0gh",
+      "name": "Insert 4",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_0t0nvv12uk",
+      "name": "Insert 5",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_wrzbhhlliq",
+      "name": "Insert 6",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_icz3h6r154",
+      "name": "Insert 7",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_evfswyxs5q",
+      "name": "Insert 8",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_nioh77uan8",
+      "name": "Insert 9",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_adph7vvxh4",
+      "name": "Insert 10",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_ah7h9i0t42",
+      "name": "Insert 11",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_3ppn3k9t0h",
+      "name": "Insert 12",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_mj7o2pdam1",
+      "name": "Insert 13",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_w1953z5v4o",
+      "name": "Insert 14",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_m7es4ye7wq",
+      "name": "Insert 15",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    },
+    {
+      "id": "mx_y7i4i3puti",
+      "name": "Insert 16",
+      "color": null,
+      "volume": 0.8,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "output": 0,
+      "sends": [],
+      "effects": [],
+      "spatial": {
+        "enabled": false,
+        "x": 0,
+        "y": 1,
+        "z": 0,
+        "lfe": 0
+      }
+    }
+  ],
+  "spatial": {
+    "enabled": false,
+    "monitor": "stereo"
+  },
+  "createdAt": "2026-10-29T02:47:52.775Z",
+  "updatedAt": "2026-10-29T02:47:55.257Z",
+  "rev": 11
+}

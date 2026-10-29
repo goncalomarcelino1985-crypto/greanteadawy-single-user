@@ -1,0 +1,385 @@
+{
+  "status": "verified",
+  "generatedAt": "2026-10-29T02:47:45.114Z",
+  "execution": "GitHub Actions Linux; isolated loopback DAW",
+  "syntheticAudioCreated": false,
+  "productionAccessed": false,
+  "tempoGridBpm": 126,
+  "tempoNote": "126 BPM is the arrangement grid; imported recordings are not time-stretched.",
+  "commands": [
+    {
+      "tool": "get_sample_info",
+      "commandPortuguese": "Analisa o ficheiro real: Original preservado.",
+      "args": {
+        "sampleId": "smp_vze6ju9w77"
+      }
+    },
+    {
+      "tool": "get_sample_info",
+      "commandPortuguese": "Analisa o ficheiro real: Voz.",
+      "args": {
+        "sampleId": "smp_chdn4xl8zj"
+      }
+    },
+    {
+      "tool": "get_sample_info",
+      "commandPortuguese": "Analisa o ficheiro real: Bateria.",
+      "args": {
+        "sampleId": "smp_7bt9oc97j9"
+      }
+    },
+    {
+      "tool": "get_sample_info",
+      "commandPortuguese": "Analisa o ficheiro real: Baixo.",
+      "args": {
+        "sampleId": "smp_tlioa6rrew"
+      }
+    },
+    {
+      "tool": "get_sample_info",
+      "commandPortuguese": "Analisa o ficheiro real: Outros instrumentos.",
+      "args": {
+        "sampleId": "smp_94uffu330z"
+      }
+    },
+    {
+      "tool": "create_project",
+      "commandPortuguese": "Cria o projeto GM AI WORKER — original preservado, com grelha de 126 BPM.",
+      "args": {
+        "name": "GM AI WORKER — original preservado",
+        "bpm": 126,
+        "template": "empty"
+      }
+    },
+    {
+      "tool": "add_audio_clip",
+      "args": {
+        "projectId": "prj_cree2cj4t0",
+        "sampleId": "smp_vze6ju9w77",
+        "startBar": 1,
+        "track": 1
+      }
+    },
+    {
+      "tool": "update_track",
+      "args": {
+        "projectId": "prj_cree2cj4t0",
+        "track": 1,
+        "name": "Original preservado"
+      }
+    },
+    {
+      "tool": "export_audio",
+      "commandPortuguese": "Exporta o áudio real deste arranjo em WAV.",
+      "args": {
+        "projectId": "prj_cree2cj4t0",
+        "format": "wav",
+        "mode": "song",
+        "bitDepth": 24
+      }
+    },
+    {
+      "tool": "create_project",
+      "commandPortuguese": "Cria o projeto GM AI WORKER — demonstração real, com grelha de 126 BPM.",
+      "args": {
+        "name": "GM AI WORKER — demonstração real",
+        "bpm": 126,
+        "template": "empty"
+      }
+    },
+    {
+      "tool": "add_audio_clip",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "sampleId": "smp_chdn4xl8zj",
+        "startBar": 1,
+        "track": 1
+      }
+    },
+    {
+      "tool": "update_track",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "track": 1,
+        "name": "Voz",
+        "color": "#61c2ff"
+      }
+    },
+    {
+      "tool": "add_audio_clip",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "sampleId": "smp_7bt9oc97j9",
+        "startBar": 1,
+        "track": 2
+      }
+    },
+    {
+      "tool": "update_track",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "track": 2,
+        "name": "Bateria",
+        "color": "#ff9e63"
+      }
+    },
+    {
+      "tool": "add_audio_clip",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "sampleId": "smp_tlioa6rrew",
+        "startBar": 1,
+        "track": 3
+      }
+    },
+    {
+      "tool": "update_track",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "track": 3,
+        "name": "Baixo",
+        "color": "#91d676"
+      }
+    },
+    {
+      "tool": "add_audio_clip",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "sampleId": "smp_94uffu330z",
+        "startBar": 1,
+        "track": 4
+      }
+    },
+    {
+      "tool": "update_track",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "track": 4,
+        "name": "Outros instrumentos",
+        "color": "#cc9bff"
+      }
+    },
+    {
+      "tool": "play",
+      "commandPortuguese": "Reproduz o arranjo com as quatro pistas reais.",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "mode": "song"
+      }
+    },
+    {
+      "tool": "stop",
+      "args": {
+        "projectId": "prj_ofs5p9u22d"
+      }
+    },
+    {
+      "tool": "export_audio",
+      "commandPortuguese": "Exporta o áudio real deste arranjo em WAV.",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "format": "wav",
+        "mode": "song",
+        "bitDepth": 24
+      }
+    },
+    {
+      "tool": "save_version",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "name": "Antes de alterar bateria e baixo"
+      }
+    },
+    {
+      "tool": "update_clips",
+      "commandPortuguese": "Mantém tudo; silencia a bateria nos primeiros 4 compassos e reduz o baixo 3 dB.",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "clips": [
+          {
+            "clipId": "clip_706s3qdc62",
+            "startBar": 5,
+            "offsetBars": 4,
+            "bars": 11.75
+          },
+          {
+            "clipId": "clip_0ri7x6bp5w",
+            "gainDb": -3
+          }
+        ]
+      }
+    },
+    {
+      "tool": "undo",
+      "commandPortuguese": "Desfaz a última alteração, recuperando a bateria e o baixo originais.",
+      "args": {
+        "projectId": "prj_ofs5p9u22d"
+      }
+    },
+    {
+      "tool": "update_clips",
+      "commandPortuguese": "Repõe exatamente a alteração anterior da bateria e do baixo.",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "clips": [
+          {
+            "clipId": "clip_706s3qdc62",
+            "startBar": 5,
+            "offsetBars": 4,
+            "bars": 11.75
+          },
+          {
+            "clipId": "clip_0ri7x6bp5w",
+            "gainDb": -3
+          }
+        ]
+      }
+    },
+    {
+      "tool": "export_audio",
+      "commandPortuguese": "Exporta o áudio real deste arranjo em WAV.",
+      "args": {
+        "projectId": "prj_ofs5p9u22d",
+        "format": "wav",
+        "mode": "song",
+        "bitDepth": 24
+      }
+    }
+  ],
+  "inputs": {
+    "mixture": {
+      "sha256": "28ab4aeb64c14582348a9a3248340b343dd0f861c1328441ecabab36ce1ca141",
+      "bytes": 5292044,
+      "sampleRate": 44100,
+      "channels": 2,
+      "frames": 1323000,
+      "durationSeconds": 30,
+      "bitsPerSample": 16,
+      "peak": 0.97998046875,
+      "peakDb": -0.17565159632615196,
+      "rms": 0.1096128504761143,
+      "nonzero": true
+    },
+    "vocals": {
+      "sha256": "919d8eb24fb1ee55081048198ecd88abc8971fdb84d411af7dcfd246a99c6b53",
+      "bytes": 5292044,
+      "sampleRate": 44100,
+      "channels": 2,
+      "frames": 1323000,
+      "durationSeconds": 30,
+      "bitsPerSample": 16,
+      "peak": 0.276153564453125,
+      "peakDb": -11.176986934930824,
+      "rms": 0.019098112712421157,
+      "nonzero": true
+    },
+    "drums": {
+      "sha256": "c63f0eb932a128077451dd74c8ca93f43d69d54aab94fdb7130c9da4c4f97064",
+      "bytes": 5292044,
+      "sampleRate": 44100,
+      "channels": 2,
+      "frames": 1323000,
+      "durationSeconds": 30,
+      "bitsPerSample": 16,
+      "peak": 0.884857177734375,
+      "peakDb": -1.0625364375096733,
+      "rms": 0.07221415945236018,
+      "nonzero": true
+    },
+    "bass": {
+      "sha256": "5413c178e7425fed218f746e5b350fde43b6dfcfc6b75d3fc3a5c88f79f2b681",
+      "bytes": 5292044,
+      "sampleRate": 44100,
+      "channels": 2,
+      "frames": 1323000,
+      "durationSeconds": 30,
+      "bitsPerSample": 16,
+      "peak": 0.5474853515625,
+      "peakDb": -5.2325499250328935,
+      "rms": 0.04681397401654681,
+      "nonzero": true
+    },
+    "other": {
+      "sha256": "bd5237c784730af1e35c4a1cc7996d2257aaf26f0b253712d938e0217920aad8",
+      "bytes": 5292044,
+      "sampleRate": 44100,
+      "channels": 2,
+      "frames": 1323000,
+      "durationSeconds": 30,
+      "bitsPerSample": 16,
+      "peak": 0.71875,
+      "peakDb": -2.868442846046262,
+      "rms": 0.06225168054699114,
+      "nonzero": true
+    }
+  },
+  "exports": {
+    "original-daw.wav": {
+      "sha256": "80482544498a67617876dd40f89e2cf398c66b139314aae20dee8108be7c9cf8",
+      "bytes": 8334944,
+      "sampleRate": 44100,
+      "channels": 2,
+      "frames": 1389150,
+      "durationSeconds": 31.5,
+      "bitsPerSample": 24,
+      "peak": 0.8148033618927002,
+      "peakDb": -1.7789437552333376,
+      "rms": 0.10511644347991522,
+      "nonzero": true,
+      "generatedBy": "DAW export_audio → browser render job → WAV export"
+    },
+    "stems-before-daw.wav": {
+      "sha256": "353bd295717d4c447b6e5b2cc1952d31410a251201b23ca75b43867b99122d34",
+      "bytes": 8334944,
+      "sampleRate": 44100,
+      "channels": 2,
+      "frames": 1389150,
+      "durationSeconds": 31.5,
+      "bitsPerSample": 24,
+      "peak": 0.8158730268478394,
+      "peakDb": -1.7675484923267302,
+      "rms": 0.1057417620740877,
+      "nonzero": true,
+      "generatedBy": "DAW export_audio → browser render job → WAV export"
+    },
+    "altered-daw.wav": {
+      "sha256": "dd67056264c0db381e93916c7268cc709cc40b64521fd45f0432a748005c0869",
+      "bytes": 8334944,
+      "sampleRate": 44100,
+      "channels": 2,
+      "frames": 1389150,
+      "durationSeconds": 31.5,
+      "bitsPerSample": 24,
+      "peak": 0.8096911907196045,
+      "peakDb": -1.8336117147278035,
+      "rms": 0.1001206532456326,
+      "nonzero": true,
+      "generatedBy": "DAW export_audio → browser render job → WAV export"
+    }
+  },
+  "stage": "MCP export_audio",
+  "browserErrors": [],
+  "expectedBrowser": {
+    "projectId": "prj_ofs5p9u22d"
+  },
+  "playback": {
+    "playing": true,
+    "audioContextState": "running",
+    "peakMeter": 0.040571440011262894
+  },
+  "edit": {
+    "drumsSilentBars": 4,
+    "drumsSilentSeconds": 7.619047619047619,
+    "bassGainDb": -3,
+    "untouchedPartsVerified": true,
+    "undoExactStateVerified": true,
+    "nativeMcpRedoAvailable": false,
+    "redoMethod": "reapplied identical MCP update_clips command",
+    "redoExactStateVerified": true,
+    "audioDifferenceRms": 0.018763797204359986
+  },
+  "projectId": "prj_ofs5p9u22d",
+  "originalProjectId": "prj_cree2cj4t0",
+  "originalInputUnchanged": true,
+  "previewImport": "project.json references sample IDs listed in samples.json; upload/remap those WAVs when importing into another studio."
+}
