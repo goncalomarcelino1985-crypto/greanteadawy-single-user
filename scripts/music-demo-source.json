@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "url": "https://ccmixter.org/content/Rataxes/Rataxes_-_A_Better_Way.mp3",
+    "sha256": "66e0b1dcbd0825dc70674e7b53faa1c1195fc78a0d2afdd767734d9c3c10f936",
+    "bytes": 15332704,
+    "format": "mp3",
+    "title": "A Better Way",
+    "artist": "Rataxes featuring Snowflake",
+    "pageUrl": "https://ccmixter.org/files/Rataxes/65367",
+    "declaredBpm": 118
+  },
+  "license": {
+    "id": "CC-BY-3.0",
+    "url": "https://creativecommons.org/licenses/by/3.0/",
+    "attribution": "A Better Way by Rataxes featuring Snowflake, https://ccmixter.org/files/Rataxes/65367, licensed under Creative Commons Attribution 3.0. Excerpt, source separation and demo arrangement are modifications."
+  },
+  "approved": {
+    "publicAudio": true,
+    "remix": true,
+    "redistribution": true
+  },
+  "clip": {
+    "startSeconds": 60,
+    "durationSeconds": 30
+  }
+}

@@ -1,0 +1,137 @@
+name: Public music separation demo
+
+on:
+  push:
+    branches: [demo/music-proof]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-music-demo
+  cancel-in-progress: false
+
+jobs:
+  separate:
+    # Public source fixture only. Standard Linux runner; no GPU/larger runner.
+    if: github.event.repository.private == false && github.ref == 'refs/heads/demo/music-proof'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      # Required only for the final, restricted output-branch publisher below.
+      contents: write
+    env:
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      NUMEXPR_NUM_THREADS: '4'
+      CUDA_VISIBLE_DEVICES: ''
+      PIP_NO_CACHE_DIR: '1'
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+      TORCH_HOME: ${{ runner.temp }}/gm-demo-models
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          # Deliberately no package/model cache or retained Actions artifacts.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate the reviewed public source before installing models
+        run: |
+          python scripts/music-demo-separate.py --self-test
+          python scripts/music-demo-separate.py --check-manifest
+      - name: Install the CPU-only separator on this disposable runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          # Matched CPU wheels: https://pytorch.org/get-started/previous-versions/#v222
+          python -m pip install 'torch==2.2.2' 'torchaudio==2.2.2' --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install 'numpy==1.26.4' 'demucs==4.0.1'
+          python -m pip check
+      - name: Separate at most 30 seconds into four actual WAV stems
+        run: python scripts/music-demo-separate.py
+      - name: Build the existing DAW and its remote browser
+        run: |
+          npm ci
+          npm run build
+          npx playwright install --with-deps chromium
+      - name: Prove import, playback, editing, Undo and WAV exports inside the DAW
+        run: node scripts/music-demo-daw.mjs
+      - name: Publish only approved demo files on a new output branch
+        env:
+          GH_DEMO_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$GITHUB_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]
+          [[ "$GITHUB_REF" == refs/heads/demo/music-proof ]]
+          demo_branch="demo/audio-${GITHUB_RUN_ID}"
+          publish_dir="$(mktemp -d "$RUNNER_TEMP/gm-demo-publish.XXXXXX")"
+          trap 'rm -rf "$publish_dir"' EXIT
+          export GIT_INDEX_FILE="$publish_dir/index"
+          export GIT_ASKPASS="$publish_dir/askpass"
+          export GIT_TERMINAL_PROMPT=0
+          unset GIT_TRACE GIT_TRACE_PACKET GIT_TRACE_CURL GIT_CURL_VERBOSE
+          cat > "$GIT_ASKPASS" <<'SH'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' 'x-access-token' ;;
+            *Password*) printf '%s\n' "$GH_DEMO_TOKEN" ;;
+            *) exit 1 ;;
+          esac
+          SH
+          chmod 700 "$GIT_ASKPASS"
+          demo_remote="https://github.com/${GITHUB_REPOSITORY}.git"
+          # Never replace a previous run's output, including a rerun of the same ID.
+          set +e
+          git -c credential.helper= ls-remote --exit-code --heads "$demo_remote" "refs/heads/$demo_branch" > "$publish_dir/existing"
+          remote_status=$?
+          set -e
+          [[ "$remote_status" == 2 ]]
+          git read-tree --empty
+          python - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          output = Path('demo-output')
+          allowed = {'mixture.wav', 'vocals.wav', 'drums.wav', 'bass.wav', 'other.wav',
+                     'original-daw.wav', 'stems-before-daw.wav', 'altered-daw.wav',
+                     'project.json', 'original-project.json', 'samples.json', 'screenshot.png',
+                     'daw-report.json', 'report.json', 'SOURCE-LICENSE.txt'}
+          files = list(output.iterdir())
+          assert {file.name for file in files} == allowed, 'Unexpected or missing demo output'
+          assert all(file.is_file() and not file.is_symlink() for file in files), 'Only regular demo files are allowed'
+          assert sum(file.stat().st_size for file in files) <= 64 * 1024 * 1024, 'Demo exceeds 64 MiB'
+          report = json.loads((output / 'report.json').read_text())
+          assert report['source']['sha256'] == '66e0b1dcbd0825dc70674e7b53faa1c1195fc78a0d2afdd767734d9c3c10f936'
+          assert report['license']['id'] == 'CC-BY-3.0'
+          assert report['clip'] == {'startSeconds': 60, 'durationSeconds': 30}
+          # Write a new Git tree directly: no checkout, clean, hooks, attributes or LFS filters.
+          for file in sorted(files):
+              blob = subprocess.check_output(['git', 'hash-object', '-w', '--no-filters', str(file)], text=True).strip()
+              subprocess.run(['git', 'update-index', '--add', '--cacheinfo', f'100644,{blob},{file.as_posix()}'], check=True)
+          tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+          assert set(tracked) == {f'demo-output/{name}' for name in allowed}
+          PY
+          demo_tree="$(git write-tree)"
+          demo_commit="$(git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit-tree "$demo_tree" -m "Public licensed music demonstration for run $GITHUB_RUN_ID")"
+          # An orphan output tree, only on the fresh demo/audio-* ref; no force push.
+          git -c credential.helper= -c core.hooksPath=/dev/null push "$demo_remote" "$demo_commit:refs/heads/$demo_branch"
+          printf 'Published licensed demo: https://github.com/%s/tree/%s/demo-output\n' "$GITHUB_REPOSITORY" "$demo_branch" >> "$GITHUB_STEP_SUMMARY"
+      - name: Report the result without retaining billed artifacts
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report = json.loads(Path('demo-output/report.json').read_text())
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write('Generated four source-separated WAVs on the standard CPU runner.\n\n')
+              summary.write('Only the licensed excerpt and demo evidence were published on a new demo/audio-* branch.\n\n')
+              summary.write('| File | Seconds | RMS dBFS | SHA-256 |\n|---|---:|---:|---|\n')
+              for name, audio in report['audio'].items():
+                  summary.write(f"| {name} | {audio['durationSeconds']:.3f} | {audio['rmsDbfs']:.2f} | {audio['sha256']} |\n")
+          PY
