@@ -59,16 +59,31 @@ jobs:
       - run: npm ci
       - name: Start isolated object storage
         run: |
-          docker run -d --name gm-s3 -p 127.0.0.1:9000:9000 -e MINIO_ROOT_USER=gm-ci-test -e MINIO_ROOT_PASSWORD=synthetic-ci-only minio/minio:RELEASE.2025-04-22T22-12-26Z server /data
-          for i in $(seq 1 30); do
-            curl -fsS http://127.0.0.1:9000/minio/health/live && break
-            sleep 2
-          done
+          # Official SeaweedFS 4.38 image; pin the verified public multi-platform manifest.
+          docker run -d --name gm-s3 -p 127.0.0.1:9000:8333 \
+            -e AWS_ACCESS_KEY_ID=gm-ci-test -e AWS_SECRET_ACCESS_KEY=synthetic-ci-only \
+            -e S3_BUCKET=gm-synthetic-test \
+            chrislusf/seaweedfs@sha256:e1ee85a3089d96c4f3df699a0944468557813f5df306819c9d368c4039070ddf \
+            mini -dir=/data -webdav=false -admin.ui=false -s3.port.iceberg=0 -master.telemetry=false
           node --input-type=module <<'JS'
-          import { S3Client, CreateBucketCommand } from '@aws-sdk/client-s3';
-          const client = new S3Client({endpoint:process.env.GM_TEST_S3_ENDPOINT, region:'us-east-1', forcePathStyle:true, credentials:{accessKeyId:process.env.GM_TEST_S3_ACCESS_KEY_ID,secretAccessKey:process.env.GM_TEST_S3_SECRET_ACCESS_KEY}});
-          await client.send(new CreateBucketCommand({Bucket:process.env.GM_TEST_S3_BUCKET}));
-          client.destroy();
+          import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
+          import { setTimeout } from 'node:timers/promises';
+          const client = new S3Client({endpoint:process.env.GM_TEST_S3_ENDPOINT, region:'us-east-1', forcePathStyle:true, maxAttempts:1, credentials:{accessKeyId:process.env.GM_TEST_S3_ACCESS_KEY_ID,secretAccessKey:process.env.GM_TEST_S3_SECRET_ACCESS_KEY}});
+          try {
+            let ready = false;
+            for (let attempt = 0; attempt < 60; attempt++) {
+              try {
+                await client.send(new HeadBucketCommand({Bucket:process.env.GM_TEST_S3_BUCKET}), {abortSignal:AbortSignal.timeout(2000)});
+                ready = true;
+                break;
+              } catch {
+                await setTimeout(1000);
+              }
+            }
+            if (!ready) throw new Error('Isolated S3 fixture did not become ready with authenticated bucket access');
+          } finally {
+            client.destroy();
+          }
           JS
       - name: Prove database, object, backup and fresh restore integration
         run: node --test --test-timeout=120000 server/test/cloud-repository.test.js server/test/cloud-server.test.js server/test/cloud-access.test.js

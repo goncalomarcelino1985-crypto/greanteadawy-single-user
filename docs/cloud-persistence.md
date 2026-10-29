@@ -138,7 +138,7 @@ online backup schedule before relying on it for ongoing creative work.
 6. Present the results and remaining limitations before a live migration.
 
 Unit tests use explicit doubles. The `cloud-storage` CI job also runs PostgreSQL
-and MinIO on a standard GitHub-hosted runner with synthetic data only. It proves
+and an isolated SeaweedFS S3 service on a standard GitHub-hosted runner with synthetic data only. It proves
 the real database/object protocols and restoration algorithm, **not** durable
 Neon service configuration or successful production migration. No user music,
 provider secrets or private backup content is uploaded as a CI artifact.
