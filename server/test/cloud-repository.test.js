@@ -231,11 +231,53 @@ test('read corruption, missing bytes and corrupt successful upload are rejected'
   await assert.rejects(objects.put(Buffer.from('next')), code('OBJECT_CORRUPT'));
 });
 
-test('private object read permission failures propagate and never trigger writes', async () => {
+test('denied object reads have a safe error code and never trigger an upload fallback', async () => {
+  for (const shape of [{ name: 'AccessDenied' }, { code: 'AccessDenied' }, { $metadata: { httpStatusCode: 403 } },
+    { name: 'NoSuchKey', $metadata: { httpStatusCode: 403 } }]) {
+    const { objects, client, pool } = environment();
+    const commands = [];
+    client.send = async (command) => {
+      commands.push(command.constructor.name);
+      throw Object.assign(new Error('FAKE_SECRET provider details'), shape);
+    };
+    await assert.rejects(objects.put(Buffer.from('bytes')), (error) => {
+      assert.equal(error.code, 'OBJECT_ACCESS_DENIED');
+      assert.ok(!String(error).includes('FAKE_SECRET'));
+      return true;
+    });
+    assert.deepEqual(commands, ['GetObjectCommand']);
+    assert.equal(pool.allocations.size, 1); // Reservations are conservative even on failure.
+  }
+});
+
+test('a denied upload is mapped safely and is not retried by the object adapter', async () => {
+  const { objects, client, pool } = environment();
+  const commands = [];
+  client.send = async (command) => {
+    commands.push(command.constructor.name);
+    if (command.constructor.name === 'GetObjectCommand') throw Object.assign(new Error('Missing'), { name: 'NoSuchKey' });
+    throw Object.assign(new Error('FAKE_SECRET'), { name: 'AccessDenied', $metadata: { httpStatusCode: 403 } });
+  };
+  await assert.rejects(objects.put(Buffer.from('bytes')), code('OBJECT_ACCESS_DENIED'));
+  assert.deepEqual(commands, ['GetObjectCommand', 'PutObjectCommand']);
+  assert.equal(pool.allocations.size, 1);
+});
+
+test('a successful PUT followed by denied verification cannot report upload success', async () => {
   const { objects, client } = environment();
-  client.send = async () => { throw Object.assign(new Error('Access denied'), { name: 'AccessDenied' }); };
-  await assert.rejects(objects.put(Buffer.from('bytes')), /Access denied/);
-  assert.equal(client.uploads, 0);
+  const original = client.send.bind(client);
+  const commands = [];
+  client.send = async (command) => {
+    commands.push(command.constructor.name);
+    if (command.constructor.name === 'GetObjectCommand' && client.uploads) {
+      throw Object.assign(new Error('Denied'), { $metadata: { httpStatusCode: 403 } });
+    }
+    return original(command);
+  };
+  await assert.rejects(objects.put(Buffer.from('bytes')), code('OBJECT_ACCESS_DENIED'));
+  assert.deepEqual(commands, ['GetObjectCommand', 'PutObjectCommand', 'GetObjectCommand']);
+  assert.equal(client.uploads, 1);
+  assert.equal(client.bytes.size, 1);
 });
 
 test('state validation rejects traversal, absolute paths, file/dir conflicts and invalid blob keys', () => {

@@ -50,6 +50,14 @@ SQL DELETE or object DELETE. The ledger's conservative reservations are retained
 A runtime credential can still replace authorized checkpoint contents through
 UPDATE; this is why independent backups remain necessary.
 
+SQL roles exist across the branch's PostgreSQL cluster, not inside one database.
+The grants above constrain the dedicated application database. They do not revoke
+PUBLIC privileges in other databases: for example, PUBLIC CONNECT can still allow
+the same role to connect elsewhere in that branch. The application pins its one
+reviewed database, but that is not a provider-side restriction on a stolen URI.
+Use a project containing only this application's data; do not claim database-wide
+isolation from a shared branch or change unrelated databases as part of setup.
+
 At connection time, a read-only PostgreSQL privilege inspection checks the actual
 role, database, memberships, ownership, required reads/writes and forbidden
 DDL/destructive grants. Missing tables, excessive grants and unverified access
@@ -101,14 +109,29 @@ management, lifecycle or versioning requests. Reader adapters reject uploads
 before any quota reservation or SDK call. Private bucket access must still be
 verified against the provider before live use.
 
-Neon's documented `storage:write` scope includes read and **DeleteObject**, and
-credentials apply to their anchor branch and descendants. The documented scopes
-do not provide a Put-only, no-delete credential or a bucket/prefix restriction.
-The application's Get/Put-only behavior therefore does not revoke the credential's
-provider-side deletion rights. Do not describe this as deletion-proof storage.
-Use a credential anchored at the intended branch, a dedicated private project,
-server-side secrets and a separately credentialed backup project. No additional
-scope or management access is required by this adapter. [Neon authentication](https://neon.com/docs/storage/authentication)
+Provision writer credentials with **both explicit scopes `storage:read` and
+`storage:write`**, then verify authenticated GET and PUT before enabling runtime.
+Neon's documentation says that write includes read, but an authorized synthetic
+provider probe accepted a small PUT with a write-only credential and returned
+`AccessDenied`/403 for GET of that same object and an absent object. The documented
+implication therefore cannot substitute for a live permission check. The explicit
+two-scope credential subsequently passed GET/PUT, fresh-connection recovery and
+an anonymous-read rejection (HTTP 403) in the authorized synthetic validation.
+Repeat these checks for each newly provisioned destination.
+
+The adapter maps denied reads/writes to `OBJECT_ACCESS_DENIED` without exposing
+provider details. A denied GET is never treated as a missing object and never
+triggers a PUT fallback. A successful PUT followed by a denied verification GET
+is also a failure, not evidence of a verified upload.
+
+Neon documents that storage-write also permits **DeleteObject**, and credentials
+apply to their anchor branch and descendants. The documented scopes do not offer
+a Put-only, no-delete credential or a bucket/prefix restriction. Treat these as
+broader credential powers even though this adapter does not exercise them. Its
+Get/Put-only behavior does not establish deletion-proof storage. Use a credential
+anchored at the intended branch, a dedicated private project, server-side secrets
+and a separately credentialed backup project. No management scope is required.
+[Neon authentication](https://neon.com/docs/storage/authentication)
 
 Neon does not enforce stored versioning/lifecycle settings and does not support
 S3 ACL/policy writes, so these are not substitutes for independent verified
@@ -119,7 +142,7 @@ copies. [Neon S3 compatibility](https://neon.com/docs/storage/s3-compatibility)
 `cloud-backup.js` uses the same configuration parser for `CLOUD_*` and `BACKUP_*`,
 including each `BINDING_JSON`. For backup, `CLOUD_*` must use the SELECT-only reader
 role plus a storage-read credential; `BACKUP_*` uses the destination writer role
-and storage-write credential. For restore, `BACKUP_*` is the reader and `CLOUD_*`
+and a credential explicitly scoped for both storage-read and storage-write. For restore, `BACKUP_*` is the reader and `CLOUD_*`
 is the new target writer. Each binding must name the role actually in that URI.
 Keep backup-management credentials out of the running studio.
 
@@ -141,6 +164,15 @@ for DELETE, TRUNCATE, DDL and ledger edits. It cannot target Neon or another rem
 service. These tests do not establish any permissions or durability in a user's
 cloud project. A separate authorized, non-destructive provider validation is
 still required before deployment or migration.
+
+`node server/src/cli/cloud-validate.js` is the separate, non-destructive provider
+check. It requires reviewed `CLOUD_*` and `READER_*` bindings for the same target,
+plus `CLOUD_VALIDATION_PROJECT_ID` and `CLOUD_VALIDATION_BRANCH_ID`. It generates
+its own unique synthetic workspace; it accepts no user workspace argument and
+retains its cloud fixtures. SQL reader permissions are inspected independently
+of application guards. Its reader object adapter can reuse a writer credential
+for this narrow test, so it explicitly reports that provider-level read-only
+object credentials and independent backups have **not** been verified.
 
 PostgreSQL ownership and PUBLIC/membership grants accumulate independently of
 application intent; the prepared role and connection preflight account for those

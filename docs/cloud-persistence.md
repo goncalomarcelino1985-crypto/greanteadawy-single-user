@@ -84,9 +84,18 @@ After first setup, disable empty initialization. Production should use a verifie
 checkpoint rather than empty initialization. Preserve `PRIVATE_ACCESS_KEY` across
 restarts so the passwordless private-browser cookie remains valid.
 
-Use separate scoped storage credentials per project. Neon storage-write also
-permits object deletion; the application sends only Get/Put, but that does not
-remove the credential's broader provider-side rights. Keep independent backups.
+Use separate scoped storage credentials per project. Writers require explicit
+`storage:read` **and** `storage:write`, with a verified live GET/PUT round trip.
+A synthetic provider probe found that write-only allowed PUT but denied GET with
+403, despite documentation describing write as including read. The explicit
+two-scope credential passed the subsequent synthetic round trip and recovery
+from a fresh connection/cache; anonymous object access returned HTTP 403.
+This is not evidence of an independent backup or a Render redeploy.
+`OBJECT_ACCESS_DENIED` stops the operation;
+it never authorizes an upload fallback or a success response.
+Neon documents that storage-write also permits object deletion; the application
+sends only Get/Put, which does not remove the credential's broader provider-side
+rights. Keep independent backups. See [the access boundary guide](cloud-access-boundary.md).
 Do not enable Neon Auth, AI Gateway, paid snapshots or paid Render disks.
 
 ## Backup and restore

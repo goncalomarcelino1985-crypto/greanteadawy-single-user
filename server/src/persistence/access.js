@@ -28,10 +28,18 @@ SELECT current_user AS role_name, current_database() AS database_name,
     AND NOT pg_catalog.has_table_privilege('public.gm_cloud_objects', 'DELETE,TRUNCATE,REFERENCES,TRIGGER')
     AND NOT pg_catalog.has_any_column_privilege('public.gm_cloud_objects', 'UPDATE')
     AND NOT pg_catalog.has_column_privilege('public.gm_workspace_checkpoints', 'repository_namespace', 'UPDATE')
-    AND NOT pg_catalog.has_column_privilege('public.gm_workspace_checkpoints', 'workspace_id', 'UPDATE') AS no_destructive_grants,
-  NOT pg_catalog.has_table_privilege('public.gm_workspace_checkpoints', 'INSERT')
+    AND NOT pg_catalog.has_column_privilege('public.gm_workspace_checkpoints', 'workspace_id', 'UPDATE')
+    -- Even allowed privileges must not be delegable to another role or PUBLIC.
+    AND NOT pg_catalog.has_database_privilege(current_database(), 'CONNECT WITH GRANT OPTION')
+    AND NOT pg_catalog.has_schema_privilege('public', 'USAGE WITH GRANT OPTION')
+    AND NOT pg_catalog.has_table_privilege('public.gm_workspace_checkpoints', 'SELECT WITH GRANT OPTION,INSERT WITH GRANT OPTION,UPDATE WITH GRANT OPTION')
+    AND NOT pg_catalog.has_table_privilege('public.gm_cloud_objects', 'SELECT WITH GRANT OPTION,INSERT WITH GRANT OPTION')
+    AND NOT pg_catalog.has_any_column_privilege('public.gm_workspace_checkpoints', 'SELECT WITH GRANT OPTION,INSERT WITH GRANT OPTION,UPDATE WITH GRANT OPTION,REFERENCES WITH GRANT OPTION')
+    AND NOT pg_catalog.has_any_column_privilege('public.gm_cloud_objects', 'SELECT WITH GRANT OPTION,INSERT WITH GRANT OPTION,REFERENCES WITH GRANT OPTION') AS no_destructive_grants,
+  -- Column INSERT grants can write rows without a table-level INSERT grant.
+  NOT pg_catalog.has_any_column_privilege('public.gm_workspace_checkpoints', 'INSERT')
     AND NOT pg_catalog.has_any_column_privilege('public.gm_workspace_checkpoints', 'UPDATE')
-    AND NOT pg_catalog.has_table_privilege('public.gm_cloud_objects', 'INSERT') AS read_only
+    AND NOT pg_catalog.has_any_column_privilege('public.gm_cloud_objects', 'INSERT') AS read_only
 FROM pg_catalog.pg_roles r WHERE r.rolname = current_user`;
 
 export async function verifyRuntimeAccess(pool, { role, database, readOnly = false }) {

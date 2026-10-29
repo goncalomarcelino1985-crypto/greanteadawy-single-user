@@ -68,6 +68,53 @@ test('real PostgreSQL runtime role can commit and reserve but cannot destroy, gr
     await assert.rejects(reader.query('UPDATE public.gm_workspace_checkpoints SET state_bytes = 0'), { code: '42501' });
     assert.equal(await repository.getGeneration('synthetic'), 2);
     assert.equal((await runtime.query('SELECT size_bytes FROM public.gm_cloud_objects')).rows[0].size_bytes, '4');
+
+    // These INSERT grants permit complete rows through explicitly named columns,
+    // while has_table_privilege(..., 'INSERT') remains false.
+    for (const [table, columns] of [
+      ['gm_workspace_checkpoints', 'repository_namespace, workspace_id, generation, state, state_bytes'],
+      ['gm_cloud_objects', 'store_namespace, object_key, size_bytes']
+    ]) {
+      await owner.query(`GRANT INSERT (${columns}) ON public.${table} TO "${readerRole}"`);
+      try {
+        const { rows: [privileges] } = await reader.query(
+          'SELECT has_table_privilege($1, $2) AS table_insert, has_any_column_privilege($1, $2) AS column_insert',
+          [`public.${table}`, 'INSERT']);
+        assert.equal(privileges.table_insert, false);
+        assert.equal(privileges.column_insert, true);
+        await assert.rejects(verifyRuntimeAccess(reader, { role: readerRole, database, readOnly: true }), { code: 'CLOUD_ACCESS_UNSAFE' });
+      } finally {
+        await owner.query(`REVOKE INSERT (${columns}) ON public.${table} FROM "${readerRole}"`);
+      }
+      await verifyRuntimeAccess(reader, { role: readerRole, database, readOnly: true });
+    }
+
+    // A role can delegate a grant without owning a table or holding memberships.
+    // Reject grant options even on privileges that the role normally requires.
+    for (const [role, connection, readOnly] of [[runtimeRole, runtime, false], [readerRole, reader, true]]) {
+      const cases = [
+        ['CONNECT', `DATABASE "${database}"`],
+        ['USAGE', 'SCHEMA public'],
+        ['SELECT', 'TABLE public.gm_workspace_checkpoints'],
+        ['SELECT', 'TABLE public.gm_cloud_objects'],
+        ['SELECT (state)', 'TABLE public.gm_workspace_checkpoints'],
+        ['SELECT (object_key)', 'TABLE public.gm_cloud_objects'],
+        ...(!readOnly ? [
+          ['INSERT', 'TABLE public.gm_workspace_checkpoints'],
+          ['INSERT', 'TABLE public.gm_cloud_objects'],
+          ['UPDATE (generation)', 'TABLE public.gm_workspace_checkpoints']
+        ] : [])
+      ];
+      for (const [privilege, object] of cases) {
+        await owner.query(`GRANT ${privilege} ON ${object} TO "${role}" WITH GRANT OPTION`);
+        try {
+          await assert.rejects(verifyRuntimeAccess(connection, { role, database, readOnly }), { code: 'CLOUD_ACCESS_UNSAFE' });
+        } finally {
+          await owner.query(`REVOKE GRANT OPTION FOR ${privilege} ON ${object} FROM "${role}"`);
+        }
+        await verifyRuntimeAccess(connection, { role, database, readOnly });
+      }
+    }
   } finally {
     await Promise.allSettled([runtime?.end(), reader?.end(), owner?.end()]);
     if (created) await admin.query(`DROP DATABASE "${database}"`);

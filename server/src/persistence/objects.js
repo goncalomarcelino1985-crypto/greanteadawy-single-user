@@ -2,6 +2,8 @@ import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { PersistenceError, hasControlCharacters, sha256, validateBudget, validateObjectReference, verifyObject } from './validation.js';
 
 const missing = (error) => error?.$metadata?.httpStatusCode === 404 || ['NoSuchKey', 'NotFound'].includes(error?.name);
+const accessDenied = (error) => error?.$metadata?.httpStatusCode === 403 || error?.name === 'AccessDenied' || error?.code === 'AccessDenied';
+const denied = () => new PersistenceError('OBJECT_ACCESS_DENIED', 'Cloud object access was denied. Verify the scoped credential before retrying.');
 
 async function readBody(body, limit) {
   const chunks = [];
@@ -40,6 +42,8 @@ export class S3ObjectStore {
     try {
       response = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: this.prefix + ref.key }));
     } catch (error) {
+      // A denied read cannot establish absence and must never trigger an upload.
+      if (accessDenied(error)) throw denied();
       if (missing(error)) throw new PersistenceError('OBJECT_MISSING', 'A required cloud object is missing.');
       throw error;
     }
@@ -66,11 +70,16 @@ export class S3ObjectStore {
     } catch (error) {
       if (error.code !== 'OBJECT_MISSING') throw error;
     }
-    await this.client.send(new PutObjectCommand({
-      Bucket: this.bucket, Key: this.prefix + ref.key, Body: bytes,
-      ContentType: 'application/octet-stream', ContentLength: bytes.length,
-      Metadata: { sha256: digest }, CacheControl: 'private, max-age=31536000, immutable'
-    }));
+    try {
+      await this.client.send(new PutObjectCommand({
+        Bucket: this.bucket, Key: this.prefix + ref.key, Body: bytes,
+        ContentType: 'application/octet-stream', ContentLength: bytes.length,
+        Metadata: { sha256: digest }, CacheControl: 'private, max-age=31536000, immutable'
+      }));
+    } catch (error) {
+      if (accessDenied(error)) throw denied();
+      throw error;
+    }
     // Confirm bytes in cloud; HTTP 200 or ETag alone does not prove integrity.
     await this.get(ref);
     return ref;
