@@ -63,12 +63,13 @@ export class RateLimiter {
   }
 }
 
-export function createAuth({ users, sessions, ttlDays = 30 }) {
+export function createAuth({ users, sessions, ttlDays = 30, privateIdentify = null }) {
   /**
    * Resolve the caller. Returns { user, via: 'session' | 'token', sid? }, { invalidToken: true } or null.
    * Tokens in the query string (?token=) are only accepted where explicitly allowed (WebSocket, MCP URL).
    */
   function identify(req, { allowQueryToken = false } = {}) {
+    if (privateIdentify) return privateIdentify(req);
     const sid = parseCookies(req.headers.cookie)[SESSION_COOKIE];
     if (sid) {
       const s = sessions.get(sid);

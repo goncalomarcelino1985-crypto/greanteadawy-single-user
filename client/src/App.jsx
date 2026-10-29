@@ -45,6 +45,8 @@ const WINDOW_TABS = [
 
 export default function App() {
   const phase = useStore((s) => s.auth.phase);
+  const singleUser = useStore((s) => s.auth.singleUser);
+  if (singleUser && phase !== 'ready') return <div className="auth-wrap"><div className="auth-card"><h1>Estúdio privado</h1><p>Volta a abrir o teu link privado para recuperar o acesso.</p></div></div>;
   if (phase !== 'ready') {
     return (
       <>
@@ -57,6 +59,7 @@ export default function App() {
 }
 
 function Studio() {
+  const ephemeralStorage = useStore((s) => s.auth.ephemeralStorage);
   const hasProject = useStore((s) => !!s.project);
   const projectName = useStore((s) => s.project?.name);
   const loading = useStore((s) => s.loading);
@@ -101,6 +104,7 @@ function Studio() {
 
   return (
     <div className={`app ${compact ? 'compact' : ''}`}>
+      {ephemeralStorage && <div role="note" style={{ padding: '6px 12px', background: '#493b1f', color: '#fff1cc', fontSize: 12 }}>Estúdio de validação · Render Free: os projetos e samples podem perder-se ao reiniciar. Guarda cópias locais antes de sair.</div>}
       <ErrorBoundary name="Toolbar"><ToolbarP /></ErrorBoundary>
       <div className="main">
         {browserOpen && !compact && <ErrorBoundary name="Browser"><BrowserP /></ErrorBoundary>}

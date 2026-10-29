@@ -31,6 +31,9 @@ function envInt(v, def, min = -Infinity, max = Infinity) {
 export function loadConfig(env = process.env) {
   const host = env.HOST || '127.0.0.1';
   return {
+    singleUser: env.SINGLE_USER === 'true',
+    privateAccessKey: env.PRIVATE_ACCESS_KEY || '',
+    ephemeralStorage: env.EPHEMERAL_STORAGE === 'true',
     port: envInt(env.PORT, 3001, 0, 65535),
     host,
     // relative paths are relative to the repository root (npm scripts run from different folders)

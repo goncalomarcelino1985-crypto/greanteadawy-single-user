@@ -78,7 +78,7 @@ export class Hub {
     const auth = req.gtdAuth;
     const client = {
       ws, clientId: null, projectId: null, userId: auth.user.id, sid: auth.sid || null, tokenHash: auth.tokenHash || null,
-      alive: true, lastSeen: Date.now()
+      expiresAt: auth.expiresAt || null, alive: true, lastSeen: Date.now()
     };
     this.clients.add(client);
     // protocol errors (bad frames, invalid UTF-8…) are emitted here; without a listener they'd crash the process
@@ -130,6 +130,7 @@ export class Hub {
 
   /** Is the credential this socket was opened with (session or API token) still valid? */
   stillValid(c) {
+    if (c.expiresAt && c.expiresAt <= Date.now()) return false;
     const u = this.users.get(c.userId);
     if (!u || u.disabled) return false;
     if (c.sid) {

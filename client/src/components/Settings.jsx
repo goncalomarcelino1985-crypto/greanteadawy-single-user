@@ -487,9 +487,11 @@ const TABS = [
 
 export function Settings() {
   const user = useStore((s) => s.auth.user);
-  const tab = useStore((s) => s.settingsTab) || 'account';
+  const selectedTab = useStore((s) => s.settingsTab) || 'account';
+  const singleUser = useStore((s) => s.auth.singleUser);
+  const tab = singleUser && ['account', 'users', 'server'].includes(selectedTab) ? 'studio' : selectedTab;
   if (!user) return null;
-  const tabs = TABS.filter(([, , , admin]) => !admin || user.role === 'admin');
+  const tabs = TABS.filter(([key, , , admin]) => (!singleUser || !['account', 'users', 'server'].includes(key)) && (!admin || user.role === 'admin'));
   return (
     <Window name="settings" title="Settings" icon="gear" minW={420} minH={320} className="settings">
       <div className="settings-layout">

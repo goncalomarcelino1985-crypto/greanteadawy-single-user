@@ -13,7 +13,7 @@ const WINDOW = 15 * 60 * 1000;
  * setupCode: first-run setup from anywhere but this computer (isLocal) needs it — it's printed in the server log — so
  * whoever reaches a freshly deployed server first can't claim the admin account.
  */
-export function createAuthRouter({ users, sessions, auth, store, samples, hub, onUserCreated, setupCode = null, isLocal = () => false, plugins = null }) {
+export function createAuthRouter({ users, sessions, auth, store, samples, hub, onUserCreated, setupCode = null, isLocal = () => false, plugins = null, singleUser = false, ephemeralStorage = false }) {
   const r = express.Router();
   // Password guessing: per username+IP (10), per username from anywhere (100, so one attacker can't
   // easily lock a user out), per IP across accounts (50).
@@ -32,6 +32,8 @@ export function createAuthRouter({ users, sessions, auth, store, samples, hub, o
   const status = (req) => {
     const a = auth.identify(req);
     return {
+      singleUser,
+      ephemeralStorage,
       setupRequired: users.count() === 0,
       setupCodeRequired: !!setupCode && users.count() === 0 && !isLocal(req),
       user: publicUser(a?.user || null),

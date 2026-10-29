@@ -1,4 +1,9 @@
-# ◆ GreanTeaDawy
+# ◆ GreanTeaDawy — personal single-user edition
+
+This fork adds a private, passwordless studio for one owner. See [single-user setup and recovery](docs/single-user.md). The upstream account flow below applies only when `SINGLE_USER` is disabled.
+
+The code is public; studio access, projects, samples and credentials are private. Render Free is used for validation only: its filesystem is ephemeral.
+
 
 **A pattern-based browser DAW — with Claude as your co-producer.**
 

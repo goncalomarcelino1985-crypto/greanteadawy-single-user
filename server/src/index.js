@@ -11,6 +11,7 @@ import { ProjectStore } from './store.js';
 import { SampleLibrary } from './samples.js';
 import { UserStore } from './auth/users.js';
 import { SessionStore } from './auth/sessions.js';
+import { createPrivateStudio } from './auth/private-studio.js';
 import { createAuth } from './auth/http.js';
 import { createAuthRouter } from './auth/routes.js';
 import { Hub } from './hub.js';
@@ -64,7 +65,8 @@ export async function createServer(config = loadConfig()) {
   const loopback = isLoopback(config.host);
   const users = await new UserStore(config.dataDir, { defaults: { mcpWithoutToken: loopback } }).init();
   const sessions = await new SessionStore(config.dataDir, { ttlDays: config.sessionTtlDays }).init();
-  const auth = createAuth({ users, sessions, ttlDays: config.sessionTtlDays });
+  const privateStudio = await createPrivateStudio(config, users);
+  const auth = createAuth({ users, sessions, ttlDays: config.sessionTtlDays, privateIdentify: privateStudio?.identify });
   const store = await new ProjectStore(config.dataDir).init();
   const samples = await new SampleLibrary(config.dataDir).init();
   const hub = new Hub({ store, samples, users, sessions });
@@ -98,6 +100,11 @@ export async function createServer(config = loadConfig()) {
     }
   };
 
+  if (privateStudio && !(await store.list(privateStudio.owner.id)).length) {
+    const project = await store.create({ ownerId: privateStudio.owner.id, template: 'empty', name: 'Estúdio do Gonçalo' });
+    await users.update(privateStudio.owner.id, { activeProjectId: project.id });
+  }
+
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', config.trustProxy);
@@ -118,11 +125,17 @@ export async function createServer(config = loadConfig()) {
     app.use((req, res, next) => (req.path === '/api/health' ? next() : validHost(req, res, next)));
   }
   // CSRF protection: browsers send Origin on cross-site requests; only same-origin (or PUBLIC_URL) may change state
-  const originOk = originChecker(config.publicUrl);
+  const standardOriginOk = originChecker(config.publicUrl);
+  const originOk = (req) => {
+    if (!privateStudio || !req.headers.origin) return standardOriginOk(req);
+    try { return new URL(req.headers.origin).origin === (config.publicUrl ? new URL(config.publicUrl).origin : `http://${req.headers.host}`); } catch { return false; }
+  };
   app.use((req, res, next) => {
     if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS' || originOk(req)) return next();
     res.status(403).json({ error: 'Cross-origin request blocked' });
   });
+
+  if (privateStudio) app.use(privateStudio.router);
 
   const api = express.Router();
   // Body limits: small for account endpoints, 1 MB by default. Large project edits and imports get their own
@@ -134,7 +147,7 @@ export async function createServer(config = loadConfig()) {
     if (isLargeBodyRoute(req)) return next();
     return defaultJson(req, res, next);
   });
-  api.use(createAuthRouter({ users, sessions, auth, store, samples, hub, onUserCreated, setupCode, isLocal, plugins }));
+  api.use(createAuthRouter({ users, sessions, auth, store, samples, hub, onUserCreated, setupCode, isLocal, plugins, singleUser: !!privateStudio, ephemeralStorage: config.ephemeralStorage }));
   api.use(createApiRouter({ store, samples, users, hub, auth, config, publicUrl, ffmpeg, plugins }));
   apiErrorHandlers(api);
   app.use('/api', api);
@@ -149,8 +162,8 @@ export async function createServer(config = loadConfig()) {
   sandboxRoutes(app);
 
   if (fs.existsSync(path.join(config.clientDist, 'index.html'))) {
-    app.use(express.static(config.clientDist, { index: false, maxAge: '1h' }));
-    app.get(/^\/(?!api\/|mcp|ws).*/, (req, res) => res.sendFile(path.join(config.clientDist, 'index.html')));
+    app.use(express.static(config.clientDist, { index: false, maxAge: privateStudio ? 0 : '1h', ...(privateStudio ? { cacheControl: false } : {}) }));
+    app.get(/^\/(?!api\/|mcp|ws).*/, (req, res) => res.sendFile(path.join(config.clientDist, 'index.html'), { cacheControl: !privateStudio }));
   } else {
     app.get('/', (req, res) => res.type('text/plain').send('GreanTeaDawy API is running. Build the client (npm run build) or run "npm run dev" and open http://localhost:5173'));
   }

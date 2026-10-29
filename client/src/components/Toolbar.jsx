@@ -131,13 +131,14 @@ export function Toolbar() {
 
   const user = useStore.getState().auth.user;
   const initials = (user?.displayName || user?.username || '?').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  const singleUser = useStore.getState().auth.singleUser;
   const userMenu = (e) => st.showContextMenu(e, [
     { header: `${user.displayName} (@${user.username})` },
-    { label: 'Account settings', onClick: () => { useStore.setState({ settingsTab: 'account' }); st.openWindow('settings'); } },
+    !singleUser && { label: 'Account settings', onClick: () => { useStore.setState({ settingsTab: 'account' }); st.openWindow('settings'); } },
     { label: 'API token & MCP', onClick: () => { useStore.setState({ settingsTab: 'api' }); st.openWindow('settings'); } },
-    user.role === 'admin' && { label: 'Manage users', onClick: () => { useStore.setState({ settingsTab: 'users' }); st.openWindow('settings'); } },
+    !singleUser && user.role === 'admin' && { label: 'Manage users', onClick: () => { useStore.setState({ settingsTab: 'users' }); st.openWindow('settings'); } },
     '-',
-    { label: 'Sign out', onClick: () => st.signOut() }
+    !singleUser && { label: 'Sign out', onClick: () => st.signOut() }
   ].filter(Boolean));
 
   const patternMenu = (e) => st.showContextMenu(e, [
@@ -232,7 +233,7 @@ export function Toolbar() {
         <button className="tbtn small about-btn" title={`About ${APP_NAME} (version ${APP_VERSION})`} aria-label={`About ${APP_NAME}`} data-testid="about-button" onClick={() => st.showAbout()}>
           <Icon name="info" size={16} />
         </button>
-        <button className="avatar" title={`${user?.displayName} — account menu`} onClick={userMenu} aria-label="Account menu">{initials}</button>
+        <button className="avatar" title={singleUser ? 'Estúdio privado' : `${user?.displayName} — account menu`} onClick={userMenu} aria-label={singleUser ? 'Studio menu' : 'Account menu'}>{initials}</button>
       </div>
     </div>
   );
